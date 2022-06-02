@@ -45,12 +45,6 @@ class wind_turbine:
 	wind_rel = 0												# deg
 	power_balance = 0 											# MW
 
-
-	def update_filter_wind_history(self):
-		self.wind_sp_hist, _ = \
-			lfilter(self.b, self.a, self.wind_sp_hist, \
-				zi=self.zi*self.wind_sp_hist_filt[0:-1])
-
 	def update_power_output(self):
 		'''
 		The instant power is calculated from 1/2.rho.a.cp.v^3
@@ -85,24 +79,6 @@ class wind_turbine:
 		else:
 			self.power_balance = self.power_hist_filt[-1]
 
-
-		'''
-		if self.power_hist_filt[0] == 0:
-			self.power_hist_filt = np.array(power_hist[-1] \
-				*np.ones(np.size(self.power_hist_filt)))
-		else:
-			power_hist_filt, _ = lfilter(self.b, self.a, \
-				power_hist, zi=self.zi*self.power_hist_filt[0])
-			self.power_hist_filt[-1] = power_hist_filt[-1]
-
-		if self.control_on == True :
-			self.power_hist[-1] -= self.control_cost
-			#self.power_hist_filt[-1] -= self.control_cost
-		#print('self.power_hist_filt = ', repr(self.power_hist_filt))
-		#print('self.power_hist = ', repr(self.power_hist))
-		#self.power_hist_filt[2] = self.power_hist_filt[1] \
-		#	+ 1/50 * (power_hist[2] - self.power_hist_filt[1])
-		'''
 
 	def get_wind(self, wind_speed, differential_wind_heading):
 		for i in range(1,self.filter_order+1):

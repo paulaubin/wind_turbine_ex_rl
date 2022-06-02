@@ -72,44 +72,7 @@ def manual_filter(b, a, input, init=[]):
         else:
             y[i] = init[i]
     return y 
-
-'''
-def manual_filter_backup(b, a, input, init=[]):
-    """Manually computes a digital filter.
-
-    Keyword arguments:
-    b -- the numerator of a filter [double]
-    a -- the denominator of a filter [double]
-    input -- the data to be filtered [np.array]
-    init -- the initial values of the filter [np.array]
-
-    Output:
-    y -- the filtered values of input
-    """
-    order = len(a)
-    print('b = ', b)
-    print('a = ', a)
-    print('init = ', repr(init))
-    print('input = ', repr(input))
-    y = np.array(np.zeros(len(input)))
-    print('y = ', repr(y))
-    if len(init) == 0:
-        init = np.array(np.zeros(order))
-    for i in range(0, order):
-        if i>= order:
-            x_term = np.sum(b * np.flip(input[i-order:i+1]))
-            print('i - order = ', repr(i - order))
-            print('i = ', repr(i))
-            print('in loop for y_term, y[i-order:i] = ', repr(y[i-order:i]))
-            print('in loop for y_term, a[1:] = ', repr(a[1:]))
-            y_term = np.sum(a[1:] * np.flip(y[i-order:i]))
-            y[i] = 1/a[0] * (x_term - y_term)
-        else:
-            y[i] = init[i]
-        print('y[', i, '] = ', y[i])
-    return y 
-'''
-
+    
 
 '''
 # Setting standard filter requirements.
