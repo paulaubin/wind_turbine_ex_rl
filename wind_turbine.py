@@ -29,9 +29,9 @@ class wind_turbine:
 	s = np.pi*50**2 											# m2
 	rho = 1.225 												# kg.m-3
 
-	rotor_cutoff = 1/30										# Hz
+	rotor_cutoff = 1/60										# Hz
 	filter_order = 4
-	b, a = butter_lowpass(rotor_cutoff, 1.0, 4)
+	b, a = butter_lowpass(rotor_cutoff, 1.0, filter_order)
 	zi = lfilter_zi(b, a)
 	angle_increment = 0.1 									# deg
 	control_cost = 1e-1										# MW
@@ -87,8 +87,8 @@ class wind_turbine:
 			self.wind_sp_hist[i-1] = self.wind_sp_hist[i]
 			self.wind_rel_heading_hist[i-1] = self.wind_rel_heading_hist[i]
 		self.wind_sp_hist[-1] = wind_speed
-		self.wind_rel_heading_hist[-1] = self.wind_rel_heading_hist[-1] \
-			+ differential_wind_heading
+		self.wind_rel_heading_hist[-1] += differential_wind_heading
+		self.wind_rel_heading_hist = self.wind_rel_heading_hist + 180 % 360 - 180
 		self.data_counter += 1
 
 	def rotate(self, direction):
@@ -110,7 +110,7 @@ class wind:
 	__speed_rate_mean = 0 			# m.s-1
 	__speed_rate_std  = 0.5 		# m.s-1
 	__heading_rate_mean = 0 		# deg
-	__heading_rate_std  = 10 		# deg
+	__heading_rate_std  = 0.5 		# deg
 	__time_step = 1 				# s
 	__seed = 10 		# the random seed to repeat the results
 	speed : float 					# m.s-1
@@ -121,45 +121,48 @@ class wind:
 	def __init__(self, speed=None, heading=None):
 		self.speed = 10 if speed==None else wind_speed
 		self.__speed_init = self.speed
-		self.heading = 0 if heading==None else heading
+		self.heading = 180 if heading==None else heading
 		self.__heading_init = self.heading
 		random.seed(self.__seed)
 
 	def generate_wind(self):
 		speed_increment = np.random.normal(self.__speed_rate_mean + \
-			(self.__speed_init - self.speed), \
+			(self.__speed_init - self.speed)/(10/self.__speed_rate_std), \
 			self.__speed_rate_std, 1)
-		self.speed += speed_increment/self.__time_step
+		self.speed += speed_increment[0]/self.__time_step
 		self.speed = np.maximum(0.0, self.speed)
 		
 		heading_increment = np.random.normal(self.__heading_rate_mean, \
 			self.__heading_rate_std, 1)
-		self.heading += heading_increment/self.__time_step
+		self.heading += heading_increment[0]/self.__time_step
 		self.heading = self.heading % 360
 
 
 wt = wind_turbine()
 wd = wind()
 
-t = np.arange(500)
+t = np.arange(600)
 power_output_filt_log = np.array(np.zeros(np.size(t)))
 power_output_log = np.array(np.zeros(np.size(t)))
 power_control_log = np.array(np.zeros(np.size(t)))
 power_balance_log = np.array(np.zeros(np.size(t)))
 wind_speed_log = np.array(np.zeros(np.size(t)))
 wind_heading_log = np.array(np.zeros(np.size(t)))
+wind_heading_prev = wd.heading
 for w in range(np.size(t)):
 #for w in range(7):
 	wd.generate_wind()
 	wind_speed = wd.speed
 	wind_heading = wd.heading
+	wind_heading_diff = wd.heading - wind_heading_prev
+	wind_heading_prev = wind_heading
 	if w > 100 and w <= 200:
 		wt.rotate(+1)
 	if w > 200 and w <= 250:
 		wt.rotate(-1)
 	if w > 250:
 		wt.rotate(0)
-	wt.get_wind(wind_speed[w], wind_heading[w])
+	wt.get_wind(wind_speed, wind_heading_diff)
 	power_output = wt.update_power_output()
 	power_output_filt_log[w] = wt.power_hist_filt[-1]
 	power_output_log[w] = wt.power_hist[-1]
