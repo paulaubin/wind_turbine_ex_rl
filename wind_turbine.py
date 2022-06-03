@@ -91,6 +91,9 @@ class wind_turbine:
 		self.wind_rel_heading_hist = self.wind_rel_heading_hist + 180 % 360 - 180
 		self.data_counter += 1
 
+		self.wind_sp = self.wind_sp_hist[-1]
+		self.wind_rel = self.wind_rel_heading_hist[-1]
+
 	def rotate(self, direction):
 		if direction == -1 :
 			self.wind_rel_heading_hist[-1] += self.angle_increment
@@ -137,7 +140,87 @@ class wind:
 		self.heading += heading_increment[0]/self.__time_step
 		self.heading = self.heading % 360
 
+@dataclass
+class simu:
+	__wind = wind()
+	__wt = wind_turbine()
+	__max_steps = 3600
+	steps = 0
+	state = {'wind_speed' :__wt.wind_sp, \
+		'wind_rel_heading' : __wt.wind_rel, \
+		'is_terminal' : False}
+	reward = __wt.power_balance
+	__wind_heading_log = __wind.heading
 
+	def reset(self): # need to check that this is a proper reset
+		self.__wind = wind()
+		self.__wt = wind_turbine()
+		self.steps = 0
+		self.state = {'wind_speed' :self.__wt.wind_sp, \
+			'wind_rel_heading' : self.__wt.wind_rel, \
+			'is_terminal' : False}
+
+	def step(self, action):
+		self.steps += 1
+
+		# Iterate the wind
+		self.__wind.generate_wind()
+		wind_heading_diff = self.__wind.heading \
+			- self.__wind_heading_log
+		self.__wind_heading_log = self.__wind.heading
+
+		# Iterate the power generated
+		self.__wt.get_wind(self.__wind.speed, wind_heading_diff)
+		self.__wt.rotate(action)
+		self.__wt.update_power_output()
+
+		# build the next state and reward
+		is_terminal = True if self.steps>=self.__max_steps else False
+		self.state = {'wind_speed' :self.__wt.wind_sp, \
+			'wind_rel_heading' : self.__wt.wind_rel, \
+			'is_terminal' : is_terminal}
+		self.reward = self.__wt.power_balance
+
+'''
+### Test simu class ###
+sm = simu()
+sm.reset()
+wind_speed = np.array([])
+wind_heading = np.array([])
+power = np.array([])
+counter = 0
+
+while sm.state['is_terminal'] == False :
+	counter += 1
+	#print('counter = ', repr(counter))
+	#print('sm.state[wind_speed] = ', repr(sm.state['wind_speed']))
+	sm.step(0)
+	wind_speed = np.append(wind_speed, [sm.state['wind_speed']])
+	wind_heading = np.append(wind_heading, \
+		sm.state['wind_rel_heading'])
+	power = np.append(power, sm.reward)
+
+print('wind_speed = ', repr(wind_speed))
+t = np.arange(len(wind_speed))
+ax1 = plt.subplot(2, 1, 1)
+plt.plot(t, wind_speed, label='wind speed from wt [m/s]')
+plt.plot(t, wind_heading, label='wind relative heading from wt [deg]')
+plt.xlabel('Time [sec]')
+plt.tick_params('x', labelbottom=False)
+plt.legend()
+plt.grid()
+
+ax2 = plt.subplot(2, 1, 2, sharex=ax1)
+plt.plot(t, power, label='power')
+plt.xlabel('Time [sec]')
+plt.ylabel('Power [MW]')
+plt.legend()
+plt.grid()
+plt.show()
+'''
+
+### Test wind_turbine and wind class ###
+'''
 wt = wind_turbine()
 wd = wind()
 
@@ -190,21 +273,5 @@ plt.xlabel('Time [sec]')
 plt.ylabel('Power [MW]')
 plt.legend()
 plt.grid()
-plt.show()
-
-'''
-wind_speed = 0.0 + np.sin(1.2*2*np.pi*t) + 1.5*np.cos(9*2*np.pi*t) + 0.5*np.sin(12.0*2*np.pi*t)
-filtered_wind = np.array(np.zeros(np.size(wind)))
-for w in range(np.size(wind)):
-#for w in range(4):
-	print('w = ', repr(w))
-	wt.get_wind(wind[w])
-	filtered_wind[w] = wt.filter_wind_history[2]
-
-plt.plot(t, wind, 'b-', label='wind')
-plt.plot(t, filtered_wind, 'g-', linewidth=2, label='filtered wind')
-plt.xlabel('Time [sec]')
-plt.grid()
-plt.legend()
 plt.show()
 '''
