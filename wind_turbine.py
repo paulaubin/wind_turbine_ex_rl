@@ -11,10 +11,12 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 from dataclasses import dataclass
 from butterworth_low_pass_filter_template \
 	import butter_lowpass, butter_lowpass_filter, manual_filter
 from scipy.signal import lfilter, lfilter_zi
+
 
 # Define the wind turbine
 @dataclass
@@ -103,18 +105,43 @@ class wind_turbine:
 			print('wind turbine command ', direction, ' not valid')
 			self.control_on = False
 
+@dataclass
+class wind:
+	__speed_rate_mean = 0 			# m.s-1
+	__speed_rate_std  = 0.5 		# m.s-1
+	__heading_rate_mean = 0 		# deg
+	__heading_rate_std  = 10 		# deg
+	__time_step = 1 				# s
+	__seed = 10 		# the random seed to repeat the results
+	speed : float 					# m.s-1
+	heading : float 				# deg
+	__speed_init : float 			# m.s-1
+	__heading_init : float 			# deg
+
+	def __init__(self, speed=None, heading=None):
+		self.speed = 10 if speed==None else wind_speed
+		self.__speed_init = self.speed
+		self.heading = 0 if heading==None else heading
+		self.__heading_init = self.heading
+		random.seed(self.__seed)
+
+	def generate_wind(self):
+		speed_increment = np.random.normal(self.__speed_rate_mean + \
+			(self.__speed_init - self.speed), \
+			self.__speed_rate_std, 1)
+		self.speed += speed_increment/self.__time_step
+		self.speed = np.maximum(0.0, self.speed)
+		
+		heading_increment = np.random.normal(self.__heading_rate_mean, \
+			self.__heading_rate_std, 1)
+		self.heading += heading_increment/self.__time_step
+		self.heading = self.heading % 360
+
 
 wt = wind_turbine()
-print('power output = ', wt.update_power_output())
+wd = wind()
 
-fs = 1.0
-T = 500.0         # value taken in seconds
-n = int(T * fs) # indicates total samples
-t = np.linspace(0, T, n, endpoint=False)
-
-########### FAIRE UNE CLASSE WIND ###############
-wind_speed = 10.0 + 1.0*np.sin(2*np.pi*0.2*t)
-wind_heading = 0.0 + 1.0*10.0*np.sin(2*np.pi*0.3*t)
+t = np.arange(500)
 power_output_filt_log = np.array(np.zeros(np.size(t)))
 power_output_log = np.array(np.zeros(np.size(t)))
 power_control_log = np.array(np.zeros(np.size(t)))
@@ -123,6 +150,9 @@ wind_speed_log = np.array(np.zeros(np.size(t)))
 wind_heading_log = np.array(np.zeros(np.size(t)))
 for w in range(np.size(t)):
 #for w in range(7):
+	wd.generate_wind()
+	wind_speed = wd.speed
+	wind_heading = wd.heading
 	if w > 100 and w <= 200:
 		wt.rotate(+1)
 	if w > 200 and w <= 250:

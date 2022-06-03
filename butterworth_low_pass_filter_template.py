@@ -72,7 +72,6 @@ def manual_filter(b, a, input, init=[]):
         else:
             y[i] = init[i]
     return y 
-    
 
 '''
 # Setting standard filter requirements.
