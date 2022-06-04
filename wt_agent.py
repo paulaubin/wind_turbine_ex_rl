@@ -88,7 +88,70 @@ print('tiles = ', repr(tiles))
 '''
 
 def compute_softmax_prob(actor_w, tiles):
-	print('')
+	"""
+    Computes softmax probability for all actions
+    It is defined as
+    pi(a|s,theta) = exp(h(s,a,theta))/sum_b(exp(h(s,b,theta) - c)
+    and normalized as
+    pi(a|s,theta) 
+    	= exp(h(s,a,theta) - c)/sum_b(exp(h(s,b,theta) - c)
+    where c = max_b(h(s,b,theta))
+    
+    Args:
+    actor_w - np.array, an array of actor weights
+    tiles - np.array, an array of active tiles
+	
+	Returns:
+	softmax_prob - np.array, an array of size equal to \
+	num. actions, and sums to 1.
+	"""
+	# Compute the list of state-action preferences
+	state_action_preferences = [actor_w[a][tiles].sum() \
+		for a in range(actor_w.shape[0])]
+
+	# Set the constant c by finding the maximum of state-action
+	# preferences
+	c = np.max(state_action_preferences)
+
+	# Compute the numerator by subtracting c from state-action
+	# preferences and exponentiating it
+	numerator = np.exp(state_action_preferences - c)
+
+	# Compute the denominator by summing the values 
+	# in the numerator
+	denominator = np.sum(numerator)
+
+	# Create a probability array by dividing each element \
+	# in numerator array by denominator
+	softmax_prob = numerator / denominator
+
+	return softmax_prob
+	
+'''
+# CHECK SOFTMAX
+iht_size = 4096
+num_tilings = 8
+num_tiles = 8
+test_tc = WindTurbineTileCoder(iht_size=iht_size, \
+		num_tilings=num_tilings, num_tiles=num_tiles)
+num_actions = 3
+actions = list(range(num_actions))
+actor_w = np.zeros((len(actions), iht_size))
+# setting actor weights such that state-action
+# preferences are always [-1, 1, 2]
+actor_w[0] = -1./num_tilings
+actor_w[1] = 1./num_tilings
+actor_w[2] = 2./num_tilings
+# obtain active_tiles from state
+state = [0, -180]
+speed, heading = state
+active_tiles = test_tc.get_tiles(speed, heading)
+# compute softmax probability
+softmax_prob = compute_softmax_prob(actor_w, active_tiles)
+print('softmax probability: {}'.format(softmax_prob))
+assert np.allclose(softmax_prob, \
+	[0.03511903, 0.25949646, 0.70538451])
+'''
 
 class ActorCriticSoftmaxAgent(BaseAgent):
 	def __init__(self):
