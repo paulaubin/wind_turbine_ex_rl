@@ -6,7 +6,7 @@
 # version ='1.0'
 # header reference : https://www.delftstack.com/howto/python/common-header-python/
 # ---------------------------------------------------------------------------
-""" Wind turbine 2D optimision exercice """
+""" Wind turbine 2D optimisation exercice - simulator code """
 # ---------------------------------------------------------------------------
 
 import numpy as np
