@@ -89,17 +89,17 @@ print('tiles = ', repr(tiles))
 
 def compute_softmax_prob(actor_w, tiles):
 	"""
-    Computes softmax probability for all actions
-    It is defined as
-    pi(a|s,theta) = exp(h(s,a,theta))/sum_b(exp(h(s,b,theta) - c)
-    and normalized as
-    pi(a|s,theta) 
-    	= exp(h(s,a,theta) - c)/sum_b(exp(h(s,b,theta) - c)
-    where c = max_b(h(s,b,theta))
-    
-    Args:
-    actor_w - np.array, an array of actor weights
-    tiles - np.array, an array of active tiles
+	Computes softmax probability for all actions
+	It is defined as
+	pi(a|s,theta) = exp(h(s,a,theta))/sum_b(exp(h(s,b,theta) - c)
+	and normalized as
+	pi(a|s,theta) 
+		= exp(h(s,a,theta) - c)/sum_b(exp(h(s,b,theta) - c)
+	where c = max_b(h(s,b,theta))
+	
+	Args:
+	actor_w - np.array, an array of actor weights
+	tiles - np.array, an array of active tiles
 	
 	Returns:
 	softmax_prob - np.array, an array of size equal to \
@@ -177,14 +177,14 @@ class ActorCriticSoftmaxAgent(BaseAgent):
 
 		Assume agent_info dict contains:
 		{
-		    "iht_size": int
-		    "num_tilings": int,
-		    "num_tiles": int,
-		    "actor_step_size": float,
-		    "critic_step_size": float,
-		    "avg_reward_step_size": float,
-		    "num_actions": int,
-		    "seed": int
+			"iht_size": int
+			"num_tilings": int,
+			"num_tiles": int,
+			"actor_step_size": float,
+			"critic_step_size": float,
+			"avg_reward_step_size": float,
+			"num_actions": int,
+			"seed": int
 		}
 		"""
 
@@ -224,15 +224,15 @@ class ActorCriticSoftmaxAgent(BaseAgent):
 		self.softmax_prob = None
 		self.prev_tiles = None
 		self.last_action = None
-    
+	
 	def agent_policy(self, active_tiles):
 		""" policy of the agent
 		Args:
-		    active_tiles (Numpy array): active tiles returned 
-		    by tile coder
-		    
+			active_tiles (Numpy array): active tiles returned 
+			by tile coder
+			
 		Returns:
-		    The action selected according to the policy
+			The action selected according to the policy
 		"""
 		
 		# compute softmax probability
@@ -255,10 +255,10 @@ class ActorCriticSoftmaxAgent(BaseAgent):
 		"""The first method called when the experiment starts,
 		called after the environment starts.
 		Args:
-		    state (Numpy array): the state from the environment's
-		    env_start function.
+			state (Numpy array): the state from the environment's
+			env_start function.
 		Returns:
-		    The first action the agent takes.
+			The first action the agent takes.
 		"""
 
 		speed, heading = state
@@ -280,14 +280,14 @@ class ActorCriticSoftmaxAgent(BaseAgent):
 	def agent_step(self, reward, state):
 		"""A step taken by the agent.
 		Args:
-		    reward (float): the reward received for taking the
-		    last action taken
-		    state (Numpy array): the state from the environment's
-		    					step based on 
+			reward (float): the reward received for taking the
+			last action taken
+			state (Numpy array): the state from the environment's
+								step based on 
 								where the agent ended up after the
 								last step.
 		Returns:
-		    The action the agent is taking.
+			The action the agent is taking.
 		"""
 
 		speed, heading = state
@@ -331,7 +331,76 @@ class ActorCriticSoftmaxAgent(BaseAgent):
 
 	def agent_message(self, message):
 		if message == 'get avg reward':
-		    return self.avg_reward
+			return self.avg_reward
+
+
+''' # CHECK AGENT 1
+agent_info = {
+	"iht_size": 4096,
+	"num_tilings": 8,
+	"num_tiles": 8,
+	"actor_step_size": 1e-1,
+	"critic_step_size": 1e-0,
+	"avg_reward_step_size": 1e-2,
+	"num_actions": 3,
+	"seed": 99,
+}
+
+test_agent = ActorCriticSoftmaxAgent()
+test_agent.agent_init(agent_info)
+
+state = [0., 0.]
+
+test_agent.agent_start(state)
+
+assert np.all(test_agent.prev_tiles == [0, 1, 2, 3, 4, 5, 6, 7])
+assert test_agent.last_action == 2
+
+print("agent active_tiles: {}".format(test_agent.prev_tiles))
+print("agent selected action: {}".format(test_agent.last_action))
+'''
+
+'''
+# CHECK AGENT 2
+env_info = {"seed": 99}
+agent_info = {
+    "iht_size": 4096,
+    "num_tilings": 8,
+    "num_tiles": 8,
+    "actor_step_size": 1e-1,
+    "critic_step_size": 1e-0,
+    "avg_reward_step_size": 1e-2,
+    "num_actions": 3,
+    "seed": 99,
+}
+
+rl_glue = RLGlue(PendulumEnvironment, ActorCriticSoftmaxAgent)
+rl_glue.rl_init(agent_info, env_info)
+
+# start env/agent
+rl_glue.rl_start()
+rl_glue.rl_step()
+
+# simple alias
+agent = rl_glue.agent
+
+print("agent next_action: {}".format(agent.last_action))
+print("agent avg reward: {}\n".format(agent.avg_reward))
+
+assert agent.last_action == 1
+assert agent.avg_reward == -0.03139092653589793
+
+print("agent first 10 values of actor weights[0]: \n{}\n".format(agent.actor_w[0][:10]))
+print("agent first 10 values of actor weights[1]: \n{}\n".format(agent.actor_w[1][:10]))
+print("agent first 10 values of actor weights[2]: \n{}\n".format(agent.actor_w[2][:10]))
+print("agent first 10 values of critic weights: \n{}".format(agent.critic_w[:10]))
+
+assert np.allclose(agent.actor_w[0][:10], [0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0., 0.])
+assert np.allclose(agent.actor_w[1][:10], [0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0., 0.])
+assert np.allclose(agent.actor_w[2][:10], [-0.02615911, -0.02615911, -0.02615911, -0.02615911, -0.02615911, -0.02615911, -0.02615911, -0.02615911, 0., 0.])
+
+assert np.allclose(agent.critic_w[:10], [-0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, 0., 0.])
+'''
 
 def run_experiment(environment, agent, agent_parameters, \
 	experiment_parameters):

@@ -181,7 +181,7 @@ class simu:
 			'is_terminal' : is_terminal}
 		self.reward = self.__wt.power_balance
 
-'''
+
 ### Test simu class ###
 sm = simu()
 sm.reset()
@@ -200,6 +200,7 @@ while sm.state['is_terminal'] == False :
 		sm.state['wind_rel_heading'])
 	power = np.append(power, sm.reward)
 
+'''
 print('wind_speed = ', repr(wind_speed))
 t = np.arange(len(wind_speed))
 ax1 = plt.subplot(2, 1, 1)
