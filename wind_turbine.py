@@ -37,19 +37,20 @@ class wind_turbine:
 	filter_order = 4
 	b, a = butter_lowpass(rotor_cutoff, 1.0, filter_order)
 	zi = lfilter_zi(b, a)
-	angle_increment = 0.1 										# deg
+	angle_increment = 1.0 										# deg
 	control_cost = 1e-1											# MW
 	control_on = False
 
-	# HIDE VARIABLES
-	wind_sp_hist = np.array(np.zeros(filter_order+1))			# m.s-1
-	wind_rel_heading_hist = np.array(np.zeros(filter_order+1))	# deg
+	wind_sp = 0													# m.s-1
+	wind_rel = 30 												# deg
+	wind_sp_hist = np.array(wind_sp * np.ones(filter_order+1))	# m.s-1
+	wind_rel_heading_hist = np.array(wind_rel * np.ones(filter_order+1))# deg
 	power_hist_filt = np.array(np.zeros(filter_order+1))  		# MW
 	power_hist = np.array(np.zeros(filter_order+1))  			# MW
+	max_power_hist = np.array(np.zeros(filter_order+1))  		# MW
 	data_counter = 0
-	wind_sp = 0													# m.s-1
-	wind_rel = 0												# deg
 	power_balance = 0 											# MW
+	max_power_balance = 0 										# MW
 
 	def update_power_output(self):
 		'''
@@ -62,28 +63,41 @@ class wind_turbine:
 		for i in range(1,self.filter_order+1):
 			self.power_hist_filt[i-1] = self.power_hist_filt[i]
 
-		power_hist = 1/1e6*np.cos(np.pi/180.0 \
-			*self.wind_rel_heading_hist)*1/2 \
+		max_power_hist = 1/1e6*1/2 \
 			*self.cp*self.rho*self.s*self.wind_sp_hist**3
 
+		power_hist = np.abs(np.cos(np.pi/180.0 \
+			*self.wind_rel_heading_hist)) * max_power_hist
+
 		self.power_hist = power_hist
+		self.max_power_hist = max_power_hist
 
 		# Filter the given power to simulate the rotor inertia
 		if self.data_counter <= self.filter_order:
 			self.power_hist_filt = np.array(np.mean( \
 				power_hist[-self.data_counter:]) \
 				*np.ones(len(power_hist)))
+			self.max_power_hist_filt = np.array(np.mean( \
+				max_power_hist[-self.data_counter:]) \
+				*np.ones(len(max_power_hist)))
+
 		else:
 			power_hist_filt = manual_filter(self.b, self.a, \
 				self.power_hist, self.power_hist_filt[:-1])
 			self.power_hist_filt[-1] = power_hist_filt[-1]
+			max_power_hist_filt = manual_filter(self.b, self.a, \
+				self.max_power_hist, self.max_power_hist_filt[:-1])
+			self.max_power_hist_filt[-1] = max_power_hist_filt[-1]
 
 		# Apply penalty due to control
 		if self.control_on :
 			self.power_balance = self.power_hist_filt[-1] \
 				- self.control_cost
+			self.max_power_balance = self.max_power_hist_filt[-1] \
+				- self.control_cost
 		else:
 			self.power_balance = self.power_hist_filt[-1]
+			self.max_power_balance = self.max_power_hist_filt[-1]
 
 
 	def get_wind(self, wind_speed, differential_wind_heading):
@@ -115,9 +129,9 @@ class wind_turbine:
 @dataclass
 class wind:
 	__speed_rate_mean = 0 			# m.s-1
-	__speed_rate_std  = 0.5 		# m.s-1
+	__speed_rate_std  = 0.0 		# m.s-1
 	__heading_rate_mean = 0 		# deg
-	__heading_rate_std  = 0.5 		# deg
+	__heading_rate_std  = 0.0 		# deg
 	__time_step = 1 				# s
 	__seed = 10 		# the random seed to repeat the results
 	speed : float 					# m.s-1
@@ -133,8 +147,13 @@ class wind:
 		random.seed(self.__seed)
 
 	def generate_wind(self):
-		speed_increment = np.random.normal(self.__speed_rate_mean + \
+		if self.__speed_rate_std != 0:
+			speed_increment = np.random.normal(self.__speed_rate_mean + \
 			(self.__speed_init - self.speed)/(10/self.__speed_rate_std), \
+			self.__speed_rate_std, 1)
+		else:
+			speed_increment = np.random.normal(self.__speed_rate_mean + \
+			(self.__speed_init - self.speed), \
 			self.__speed_rate_std, 1)
 		self.speed += speed_increment[0]/self.__time_step
 		self.speed = np.maximum(0.0, self.speed)
@@ -153,7 +172,7 @@ class simu:
 	state = {'wind_speed' :__wt.wind_sp, \
 		'wind_rel_heading' : __wt.wind_rel, \
 		'is_terminal' : False}
-	reward = __wt.power_balance
+	reward = __wt.power_balance - __wt.max_power_balance
 	__wind_heading_log = __wind.heading
 
 	def reset(self): # need to check that this is a proper reset
@@ -183,7 +202,11 @@ class simu:
 		self.state = {'wind_speed' :self.__wt.wind_sp, \
 			'wind_rel_heading' : self.__wt.wind_rel, \
 			'is_terminal' : is_terminal}
-		self.reward = self.__wt.power_balance
+		self.reward = self.__wt.power_balance \
+			- self.__wt.max_power_balance
+
+	def get_power_balance(self):
+		return self.__wt.power_balance
 
 
 class WindTurbineEnvironment(BaseEnvironment):
@@ -261,9 +284,10 @@ sm.reset()
 wind_speed = np.array([])
 wind_heading = np.array([])
 power = np.array([])
+reward = np.array([])
 counter = 0
 
-while sm.state['is_terminal'] == False :
+while sm.state['is_terminal'] == False and counter < 3600*24*1 :
 	counter += 1
 	#print('counter = ', repr(counter))
 	#print('sm.state[wind_speed] = ', repr(sm.state['wind_speed']))
@@ -271,10 +295,10 @@ while sm.state['is_terminal'] == False :
 	wind_speed = np.append(wind_speed, [sm.state['wind_speed']])
 	wind_heading = np.append(wind_heading, \
 		sm.state['wind_rel_heading'])
-	power = np.append(power, sm.reward)
+	reward = np.append(reward, sm.reward)
+	power = np.append(power, sm.get_power_balance())
 
 
-print('wind_speed = ', repr(wind_speed))
 t = np.arange(len(wind_speed))
 ax1 = plt.subplot(2, 1, 1)
 plt.plot(t, wind_speed, label='wind speed from wt [m/s]')
@@ -286,6 +310,7 @@ plt.grid()
 
 ax2 = plt.subplot(2, 1, 2, sharex=ax1)
 plt.plot(t, power, label='power')
+plt.plot(t, reward, label='reward')
 plt.xlabel('Time [sec]')
 plt.ylabel('Power [MW]')
 plt.legend()

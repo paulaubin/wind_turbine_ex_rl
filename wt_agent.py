@@ -432,6 +432,8 @@ def run_experiment(environment, agent, environment_parameters, \
                         # results to save
                         return_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
                         exp_avg_reward_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
+                        wind_heading_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
+                        action_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
 
                         # using tqdm we visualize progress bars 
                         for run in tqdm(range(1, experiment_parameters["num_runs"]+1)):
@@ -444,6 +446,8 @@ def run_experiment(environment, agent, environment_parameters, \
                             num_steps = 0
                             total_return = 0.
                             return_arr = []
+                            wind_heading = 0. # MAYBE FALSE, DEPENDS ON INIT
+                            action_log = 1
 
                             # exponential average reward without initial bias
                             exp_avg_reward = 0.0
@@ -455,7 +459,9 @@ def run_experiment(environment, agent, environment_parameters, \
                                 
                                 rl_step_result = rl_glue.rl_step()
                                 
-                                reward = rl_step_result[0]
+                                reward, state, action, _ = rl_step_result
+                                wind_heading = state[1]
+
                                 total_return += reward
                                 return_arr.append(reward)
                                 avg_reward = rl_glue.rl_agent_message("get avg reward")
@@ -466,6 +472,8 @@ def run_experiment(environment, agent, environment_parameters, \
                                 
                                 return_per_step[run-1][num_steps-1] = total_return
                                 exp_avg_reward_per_step[run-1][num_steps-1] = exp_avg_reward
+                                wind_heading_per_step[run-1][num_steps-1] = wind_heading
+                                action_per_step[run-1][num_steps-1] = action
                                                         
                         if not os.path.exists('results'):
                             os.makedirs('results')
@@ -473,9 +481,13 @@ def run_experiment(environment, agent, environment_parameters, \
                         save_name = "ActorCriticSoftmax_tilings_{}_tiledim_{}_actor_ss_{}_critic_ss_{}_avg_reward_ss_{}".format(num_tilings, num_tiles, actor_ss, critic_ss, avg_reward_ss)
                         total_return_filename = "results/{}_total_return.npy".format(save_name)
                         exp_avg_reward_filename = "results/{}_exp_avg_reward.npy".format(save_name)
+                        wind_heading_filename = "results/{}_wind_heading.npy".format(save_name)
+                        action_filename = "results/{}_action.npy".format(save_name)
 
                         np.save(total_return_filename, return_per_step)
                         np.save(exp_avg_reward_filename, exp_avg_reward_per_step)
+                        np.save(wind_heading_filename, wind_heading_per_step)
+                        np.save(action_filename, action_per_step)
 
 
 #### Run Experiment
@@ -483,7 +495,7 @@ def run_experiment(environment, agent, environment_parameters, \
 # Experiment parameters
 experiment_parameters = {
     "max_steps" : 20, #20000,
-    "num_runs" : 2, #50
+    "num_runs" : 1, #50
 }
 
 # Environment parameters
@@ -496,8 +508,8 @@ environment_parameters = {}
 agent_parameters = {
     "num_tilings": [32],
     "num_tiles": [8],
-    "actor_step_size": [2**(-2)],
-    "critic_step_size": [2**1],
+    "actor_step_size": [2**(-2)], #[2**(-2)],
+    "critic_step_size": [2**1], #[2**1],
     "avg_reward_step_size": [2**(-6)],
     "num_actions": 3,
     "iht_size": 4096
