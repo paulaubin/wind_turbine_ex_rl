@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from butterworth_low_pass_filter_template \
 	import butter_lowpass, butter_lowpass_filter, manual_filter
 from scipy.signal import lfilter, lfilter_zi
-import wt_environment
+import rlglue_environment
 
 
 # Define the wind turbine
