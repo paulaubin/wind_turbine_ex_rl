@@ -16,7 +16,8 @@ from dataclasses import dataclass
 from butterworth_low_pass_filter_template \
 	import butter_lowpass, butter_lowpass_filter, manual_filter
 from scipy.signal import lfilter, lfilter_zi
-import rlglue_environment
+#import rlglue_environment
+from rlglue_environment import BaseEnvironment
 
 
 # Define the wind turbine
@@ -220,7 +221,7 @@ class WindTurbineEnvironment(BaseEnvironment):
 		return obs
 
 
-	def env_step(self, action):
+	def env_step(self, action=0):
 		"""A step taken by the environment.
 		Args:
 			action: The action taken by the agent
@@ -230,11 +231,13 @@ class WindTurbineEnvironment(BaseEnvironment):
 			state observation,
 				and boolean indicating if it's terminal.
 		"""
-		self.__simu.step(action)
+		self.__simu.step(action - 1)
 		self.reward_obs_term \
 			= (self.__simu.reward, [self.__simu.state['wind_speed'], \
 				self.__simu.state['wind_rel_heading']], \
 				self.__simu.state['is_terminal'])
+
+		return self.reward_obs_term
 
 
 	def env_cleanup(self):

@@ -117,7 +117,7 @@ class RLGlue:
             (float, state, action, Boolean): reward, last state observation,
                 last action, boolean indicating termination
         """
-
+        
         (reward, last_state, term) = self.environment.env_step(self.last_action)
 
         self.total_reward += reward

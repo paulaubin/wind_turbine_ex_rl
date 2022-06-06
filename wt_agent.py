@@ -19,6 +19,8 @@ from rl_glue import RLGlue
 from agents import BaseAgent
 import tiles3 as tc
 
+from wind_turbine import WindTurbineEnvironment
+
 
 class WindTurbineTileCoder:
 	def __init__(self, iht_size=4092, num_tilings=32, num_tiles=8):
@@ -263,8 +265,8 @@ class ActorCriticSoftmaxAgent(BaseAgent):
 
 		speed, heading = state
 
-		### Use self.tc to get active_tiles using angle and
-		# ang_vel (2 lines)
+		### Use self.tc to get active_tiles using speed and
+		# heading (2 lines)
 		# set current_action by calling self.agent_policy
 		# with active_tiles
 		
@@ -294,7 +296,7 @@ class ActorCriticSoftmaxAgent(BaseAgent):
 
 		# Use self.tc to get active_tiles using speed and
 		# heading
-		active_tiles = self.tc.get_tiles(angle, ang_vel)
+		active_tiles = self.tc.get_tiles(speed, heading)
 		
 		# Compute delta using Equation (1)
 		delta = reward - self.avg_reward \
@@ -361,7 +363,7 @@ print("agent selected action: {}".format(test_agent.last_action))
 '''
 
 
-# CHECK AGENT 2
+''' # CHECK AGENT 2
 env_info = {"seed": 99}
 agent_info = {
     "iht_size": 4096,
@@ -388,19 +390,19 @@ print("agent next_action: {}".format(agent.last_action))
 print("agent avg reward: {}\n".format(agent.avg_reward))
 
 assert agent.last_action == 1
-assert agent.avg_reward == -0.03139092653589793
+#assert agent.avg_reward == -0.03139092653589793
 
 print("agent first 10 values of actor weights[0]: \n{}\n".format(agent.actor_w[0][:10]))
 print("agent first 10 values of actor weights[1]: \n{}\n".format(agent.actor_w[1][:10]))
 print("agent first 10 values of actor weights[2]: \n{}\n".format(agent.actor_w[2][:10]))
 print("agent first 10 values of critic weights: \n{}".format(agent.critic_w[:10]))
 
-assert np.allclose(agent.actor_w[0][:10], [0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0., 0.])
-assert np.allclose(agent.actor_w[1][:10], [0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0., 0.])
-assert np.allclose(agent.actor_w[2][:10], [-0.02615911, -0.02615911, -0.02615911, -0.02615911, -0.02615911, -0.02615911, -0.02615911, -0.02615911, 0., 0.])
+#assert np.allclose(agent.actor_w[0][:10], [0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0., 0.])
+#assert np.allclose(agent.actor_w[1][:10], [0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0., 0.])
+#assert np.allclose(agent.actor_w[2][:10], [-0.02615911, -0.02615911, -0.02615911, -0.02615911, -0.02615911, -0.02615911, -0.02615911, -0.02615911, 0., 0.])
 
-assert np.allclose(agent.critic_w[:10], [-0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, 0., 0.])
-
+#assert np.allclose(agent.critic_w[:10], [-0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, 0., 0.])
+'''
 
 '''
 # ---------------
