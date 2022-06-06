@@ -33,18 +33,18 @@ class wind_turbine:
 	s = np.pi*50**2 											# m2
 	rho = 1.225 												# kg.m-3
 
-	rotor_cutoff = 1/60										# Hz
+	rotor_cutoff = 1/60											# Hz
 	filter_order = 4
 	b, a = butter_lowpass(rotor_cutoff, 1.0, filter_order)
 	zi = lfilter_zi(b, a)
-	angle_increment = 0.1 									# deg
-	control_cost = 1e-1										# MW
+	angle_increment = 0.1 										# deg
+	control_cost = 1e-1											# MW
 	control_on = False
 
 	# HIDE VARIABLES
 	wind_sp_hist = np.array(np.zeros(filter_order+1))			# m.s-1
-	wind_rel_heading_hist = np.array(np.zeros(filter_order+1))# deg
-	power_hist_filt = np.array(np.zeros(filter_order+1))  	# MW
+	wind_rel_heading_hist = np.array(np.zeros(filter_order+1))	# deg
+	power_hist_filt = np.array(np.zeros(filter_order+1))  		# MW
 	power_hist = np.array(np.zeros(filter_order+1))  			# MW
 	data_counter = 0
 	wind_sp = 0													# m.s-1
@@ -148,7 +148,7 @@ class wind:
 class simu:
 	__wind = wind()
 	__wt = wind_turbine()
-	__max_steps = 3600
+	__max_steps = float('inf')
 	steps = 0
 	state = {'wind_speed' :__wt.wind_sp, \
 		'wind_rel_heading' : __wt.wind_rel, \

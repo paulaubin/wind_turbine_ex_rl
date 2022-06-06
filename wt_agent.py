@@ -11,6 +11,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+import os
 import itertools
 from tqdm import tqdm
 
@@ -18,6 +19,7 @@ from rl_glue import RLGlue
 
 from agents import BaseAgent
 import tiles3 as tc
+import plot_script
 
 from wind_turbine import WindTurbineEnvironment
 
@@ -404,13 +406,10 @@ print("agent first 10 values of critic weights: \n{}".format(agent.critic_w[:10]
 #assert np.allclose(agent.critic_w[:10], [-0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, 0., 0.])
 '''
 
-'''
-# ---------------
-# Discussion Cell
-# ---------------
 
 # Define function to run experiment
-def run_experiment(environment, agent, environment_parameters, agent_parameters, experiment_parameters):
+def run_experiment(environment, agent, environment_parameters, \
+	agent_parameters, experiment_parameters):
 
     rl_glue = RLGlue(environment, agent)
             
@@ -477,5 +476,38 @@ def run_experiment(environment, agent, environment_parameters, agent_parameters,
 
                         np.save(total_return_filename, return_per_step)
                         np.save(exp_avg_reward_filename, exp_avg_reward_per_step)
-'''
+
+
+#### Run Experiment
+
+# Experiment parameters
+experiment_parameters = {
+    "max_steps" : 20, #20000,
+    "num_runs" : 2, #50
+}
+
+# Environment parameters
+environment_parameters = {}
+
+# Agent parameters
+# Each element is an array because we will be later sweeping
+# over multiple values actor and critic step-sizes
+# are divided by num. tilings inside the agent
+agent_parameters = {
+    "num_tilings": [32],
+    "num_tiles": [8],
+    "actor_step_size": [2**(-2)],
+    "critic_step_size": [2**1],
+    "avg_reward_step_size": [2**(-6)],
+    "num_actions": 3,
+    "iht_size": 4096
+}
+
+current_env = WindTurbineEnvironment
+current_agent = ActorCriticSoftmaxAgent
+
+
+run_experiment(current_env, current_agent, environment_parameters, \
+	agent_parameters, experiment_parameters)
+plot_script.plot_result(agent_parameters, 'results')
 
