@@ -16,9 +16,12 @@ from dataclasses import dataclass
 from butterworth_low_pass_filter_template \
 	import butter_lowpass, butter_lowpass_filter, manual_filter
 from scipy.signal import lfilter, lfilter_zi
+import wt_environment
 
 
 # Define the wind turbine
+### TODO : SAME METHODS AS FOR
+### https://github.com/andnp/coursera-rl-glue/blob/master/RLGlue/environment.py
 @dataclass
 class wind_turbine:
 	"""
@@ -182,6 +185,73 @@ class simu:
 		self.reward = self.__wt.power_balance
 
 
+class WindTurbineEnvironment(BaseEnvironment):
+	__simu = simu()
+
+	def __init__(self):
+		reward = None
+		observation = None
+		termination = None
+		self.reward_obs_term = (reward, observation, termination)
+
+	def env_init(self, env_info={}):
+		"""Setup for the environment called when the experiment
+		first starts.
+		Note:
+			Initialize a tuple with the reward, first state
+			observation, boolean
+			indicating if it's terminal.
+		"""
+		self.reward_obs_term \
+			= (self.__simu.reward, [self.__simu.state['wind_speed'], \
+				self.__simu.state['wind_rel_heading']], \
+				self.__simu.state['is_terminal'])
+
+
+	def env_start(self):
+		"""The first method called when the experiment starts,
+		called before the agent starts.
+
+		Returns:
+			The first state observation from the environment.
+		"""
+		obs = [self.__simu.state['wind_speed'], \
+			self.__simu.state['wind_rel_heading']]
+		return obs
+
+
+	def env_step(self, action):
+		"""A step taken by the environment.
+		Args:
+			action: The action taken by the agent
+
+		Returns:
+			(float, state, Boolean): a tuple of the reward,
+			state observation,
+				and boolean indicating if it's terminal.
+		"""
+		self.__simu.step(action)
+		self.reward_obs_term \
+			= (self.__simu.reward, [self.__simu.state['wind_speed'], \
+				self.__simu.state['wind_rel_heading']], \
+				self.__simu.state['is_terminal'])
+
+
+	def env_cleanup(self):
+		"""Cleanup done after the environment ends"""
+		self.__simu.reset()
+		self.env_init()
+
+
+	#def env_message(self, message):
+		"""A message asking the environment for information
+		Args:
+			message: the message passed to the environment
+		Returns:
+			the response (or answer) to the message
+		"""
+
+'''
 ### Test simu class ###
 sm = simu()
 sm.reset()
@@ -200,7 +270,7 @@ while sm.state['is_terminal'] == False :
 		sm.state['wind_rel_heading'])
 	power = np.append(power, sm.reward)
 
-'''
+
 print('wind_speed = ', repr(wind_speed))
 t = np.arange(len(wind_speed))
 ax1 = plt.subplot(2, 1, 1)
