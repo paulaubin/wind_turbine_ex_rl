@@ -508,9 +508,9 @@ environment_parameters = {}
 agent_parameters = {
     "num_tilings": [32],
     "num_tiles": [8],
-    "actor_step_size": [2**(-4)], #[2**(-2)],
-    "critic_step_size": [2**(-1)], #[2**1],
-    "avg_reward_step_size": [2**(-3)], #[2**(-6)],
+    "actor_step_size": [2**(-2)], #[2**(-2)],
+    "critic_step_size": [2**(1)], #[2**1],
+    "avg_reward_step_size": [2**(-6)], #[2**(-6)],
     "num_actions": 3,
     "iht_size": 4096,
 }

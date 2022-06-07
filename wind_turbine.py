@@ -95,11 +95,10 @@ class wind_turbine:
 			# but not sure if markov
 			self.power_balance = self.power_hist[-1] \
 				- self.control_cost
-			self.max_power_balance = self.max_power_hist[-1] \
-				- self.control_cost # same
 		else:
 			self.power_balance = self.power_hist[-1]
-			self.max_power_balance = self.max_power_hist[-1]
+
+		self.max_power_balance = self.max_power_hist[-1]
 
 
 	def get_wind(self, wind_speed, differential_wind_heading):
