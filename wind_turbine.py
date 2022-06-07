@@ -297,55 +297,56 @@ class WindTurbineEnvironment(BaseEnvironment):
 			the response (or answer) to the message
 		"""
 
-'''
+
 ### Test simu class ###
-sm = simu()
-sm.reset()
-wind_speed = np.array([])
-wind_heading = np.array([])
-power = np.array([])
-max_power = np.array([])
-reward = np.array([])
-counter = 0
-action = 0
+def plot_wind_turbine_example():
+	sm = simu()
+	sm.reset()
+	wind_speed = np.array([])
+	wind_heading = np.array([])
+	power = np.array([])
+	max_power = np.array([])
+	reward = np.array([])
+	counter = 0
+	action = 0
 
-while sm.state['is_terminal'] == False and counter < 600 :
-	counter += 1
-	#print('counter = ', repr(counter))
-	#print('sm.state[wind_speed] = ', repr(sm.state['wind_speed']))
-	if counter > 200:
-		action = -1
-	if counter > 500:
-		action = +1
-	if counter > 500:
-		action = 0
-	sm.step(action)
-	wind_speed = np.append(wind_speed, [sm.state['wind_speed']])
-	wind_heading = np.append(wind_heading, \
-		sm.state['wind_rel_heading'])
-	reward = np.append(reward, sm.reward)
-	power = np.append(power, sm.get_power_balance())
-	max_powre = np.append(max_power, sm.get_max_power_balance())
+	while sm.state['is_terminal'] == False and counter < 300 :
+		counter += 1
+		#print('counter = ', repr(counter))
+		#print('sm.state[wind_speed] = ', repr(sm.state['wind_speed']))
+		if counter > 200:
+			action = -1
+		if counter > 260:
+			action = +1
+		if counter > 290:
+			action = 0
+		sm.step(action)
+		wind_speed = np.append(wind_speed, [sm.state['wind_speed']])
+		wind_heading = np.append(wind_heading, \
+			sm.state['wind_rel_heading'])
+		reward = np.append(reward, sm.reward)
+		power = np.append(power, sm.get_power_balance())
+		max_powre = np.append(max_power, sm.get_max_power_balance())
 
 
-t = np.arange(len(wind_speed))
-ax1 = plt.subplot(2, 1, 1)
-plt.plot(t, wind_speed, label='wind speed from wt [m/s]')
-plt.plot(t, wind_heading, label='wind relative heading from wt [deg]')
-plt.xlabel('Time [sec]')
-plt.tick_params('x', labelbottom=False)
-plt.legend()
-plt.grid()
+	t = np.arange(len(wind_speed))
+	ax1 = plt.subplot(2, 1, 1)
+	plt.plot(t, wind_speed, label='wind speed from wt [m/s]')
+	plt.plot(t, wind_heading, label='wind relative heading from wt [deg]')
+	plt.xlabel('Time [sec]')
+	plt.tick_params('x', labelbottom=False)
+	plt.legend()
+	plt.grid()
 
-ax2 = plt.subplot(2, 1, 2, sharex=ax1)
-plt.plot(t, power, label='power')
-plt.plot(t, reward, label='reward')
-plt.xlabel('Time [sec]')
-plt.ylabel('Power [MW]')
-plt.legend()
-plt.grid()
-plt.show()
-'''
+	ax2 = plt.subplot(2, 1, 2, sharex=ax1)
+	plt.plot(t, power, label='power')
+	plt.plot(t, reward, label='reward')
+	plt.xlabel('Time [sec]')
+	plt.ylabel('Power [MW]')
+	plt.legend()
+	plt.grid()
+	plt.show()
+
 
 ### Test wind_turbine and wind class ###
 '''
