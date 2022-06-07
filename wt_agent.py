@@ -460,7 +460,7 @@ def run_experiment(environment, agent, environment_parameters, \
                                 rl_step_result = rl_glue.rl_step()
                                 
                                 reward, state, action, _ = rl_step_result
-                                wind_heading = state[1] * 180/np.pi
+                                wind_heading = state[1]
 
                                 total_return += reward
                                 return_arr.append(reward)
@@ -508,7 +508,7 @@ environment_parameters = {}
 agent_parameters = {
     "num_tilings": [32],
     "num_tiles": [8],
-    "actor_step_size": [2**(-3)], #[2**(-2)],
+    "actor_step_size": [2**(-4)], #[2**(-2)],
     "critic_step_size": [2**(-1)], #[2**1],
     "avg_reward_step_size": [2**(-3)], #[2**(-6)],
     "num_actions": 3,

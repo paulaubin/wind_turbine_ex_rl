@@ -133,7 +133,7 @@ class wind:
 	__speed_rate_mean = 0 			# m.s-1
 	__speed_rate_std  = 0.0 		# m.s-1
 	__heading_rate_mean = 0 		# deg
-	__heading_rate_std  = 0.0 		# deg
+	__heading_rate_std  = 0.1 		# deg
 	__time_step = 1 				# s
 	__seed = 10 		# the random seed to repeat the results
 	speed : float 					# m.s-1
@@ -250,7 +250,7 @@ class WindTurbineEnvironment(BaseEnvironment):
 		self.__simu.reset()
 		self.reward_obs_term \
 			= (self.__simu.reward, [self.__simu.state['wind_speed'], \
-				self.__simu.state['wind_rel_heading']*np.pi/180], \
+				self.__simu.state['wind_rel_heading']], \
 				self.__simu.state['is_terminal'])
 
 
@@ -262,7 +262,7 @@ class WindTurbineEnvironment(BaseEnvironment):
 			The first state observation from the environment.
 		"""
 		obs = [self.__simu.state['wind_speed'], \
-			self.__simu.state['wind_rel_heading']*np.pi/180]
+			self.__simu.state['wind_rel_heading']]
 		return obs
 
 
@@ -279,7 +279,7 @@ class WindTurbineEnvironment(BaseEnvironment):
 		self.__simu.step(action - 1)
 		self.reward_obs_term \
 			= (self.__simu.reward, [self.__simu.state['wind_speed'], \
-				self.__simu.state['wind_rel_heading']*np.pi/180], \
+				self.__simu.state['wind_rel_heading']], \
 				self.__simu.state['is_terminal'])
 
 		return self.reward_obs_term
