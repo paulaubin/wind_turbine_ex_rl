@@ -460,7 +460,7 @@ def run_experiment(environment, agent, environment_parameters, \
                                 rl_step_result = rl_glue.rl_step()
                                 
                                 reward, state, action, _ = rl_step_result
-                                wind_heading = state[1]
+                                wind_heading = state[1] * 180/np.pi
 
                                 total_return += reward
                                 return_arr.append(reward)
@@ -494,7 +494,7 @@ def run_experiment(environment, agent, environment_parameters, \
 
 # Experiment parameters
 experiment_parameters = {
-    "max_steps" : 20, #20000,
+    "max_steps" : 10000, #20000,
     "num_runs" : 1, #50
 }
 
@@ -508,16 +508,17 @@ environment_parameters = {}
 agent_parameters = {
     "num_tilings": [32],
     "num_tiles": [8],
-    "actor_step_size": [2**(-2)], #[2**(-2)],
-    "critic_step_size": [2**1], #[2**1],
-    "avg_reward_step_size": [2**(-6)],
+    "actor_step_size": [2**(-3)], #[2**(-2)],
+    "critic_step_size": [2**(-1)], #[2**1],
+    "avg_reward_step_size": [2**(-3)], #[2**(-6)],
     "num_actions": 3,
-    "iht_size": 4096
+    "iht_size": 4096,
 }
+np.random.seed(100)
+
 
 current_env = WindTurbineEnvironment
 current_agent = ActorCriticSoftmaxAgent
-
 
 run_experiment(current_env, current_agent, environment_parameters, \
 	agent_parameters, experiment_parameters)
