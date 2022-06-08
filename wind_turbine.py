@@ -307,6 +307,7 @@ def plot_wind_turbine_example():
 	power = np.array([])
 	max_power = np.array([])
 	reward = np.array([])
+	action_log = np.array([])
 	counter = 0
 	action = 0
 
@@ -320,30 +321,32 @@ def plot_wind_turbine_example():
 			action = +1
 		if counter > 290:
 			action = 0
+		action_log = np.append(action_log, [action])
 		sm.step(action)
 		wind_speed = np.append(wind_speed, [sm.state['wind_speed']])
 		wind_heading = np.append(wind_heading, \
 			sm.state['wind_rel_heading'])
 		reward = np.append(reward, sm.reward)
 		power = np.append(power, sm.get_power_balance())
-		max_powre = np.append(max_power, sm.get_max_power_balance())
+		max_power = np.append(max_power, sm.get_max_power_balance())
 
 
 	t = np.arange(len(wind_speed))
 	ax1 = plt.subplot(2, 1, 1)
-	plt.plot(t, wind_speed, label='wind speed from wt [m/s]')
-	plt.plot(t, wind_heading, label='wind relative heading from wt [deg]')
+	#plt.plot(t, wind_speed, label='wind speed from wt [m/s]')
+	plt.plot(t, wind_heading, label='wind heading relative to wind turbine [deg]')
 	plt.xlabel('Time [sec]')
 	plt.tick_params('x', labelbottom=False)
 	plt.legend()
 	plt.grid()
 
 	ax2 = plt.subplot(2, 1, 2, sharex=ax1)
-	plt.plot(t, power, label='power')
-	plt.plot(t, reward, label='reward')
+	plt.plot(t, power, label='wind turbine power')
+	plt.plot(t, action_log, label='action')
+	#plt.plot(t, reward, label='reward')
 	plt.xlabel('Time [sec]')
 	plt.ylabel('Power [MW]')
-	plt.legend()
+	plt.legend(loc='upper left')
 	plt.grid()
 	plt.show()
 
