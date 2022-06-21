@@ -23,6 +23,10 @@ import plot_script
 
 from wind_turbine import WindTurbineEnvironment
 
+'''
+from typing import Iterable, Any
+from itertools import product
+'''
 
 class WindTurbineTileCoder:
 	def __init__(self, iht_size=4092, num_tilings=32, num_tiles=8):
@@ -338,164 +342,130 @@ class ActorCriticSoftmaxAgent(BaseAgent):
 			return self.avg_reward
 
 
-''' # CHECK AGENT 1
-agent_info = {
-	"iht_size": 4096,
-	"num_tilings": 8,
-	"num_tiles": 8,
-	"actor_step_size": 1e-1,
-	"critic_step_size": 1e-0,
-	"avg_reward_step_size": 1e-2,
-	"num_actions": 3,
-	"seed": 99,
-}
-
-test_agent = ActorCriticSoftmaxAgent()
-test_agent.agent_init(agent_info)
-
-state = [0., 0.]
-
-test_agent.agent_start(state)
-
-assert np.all(test_agent.prev_tiles == [0, 1, 2, 3, 4, 5, 6, 7])
-assert test_agent.last_action == 2
-
-print("agent active_tiles: {}".format(test_agent.prev_tiles))
-print("agent selected action: {}".format(test_agent.last_action))
-'''
-
-
-''' # CHECK AGENT 2
-env_info = {"seed": 99}
-agent_info = {
-    "iht_size": 4096,
-    "num_tilings": 8,
-    "num_tiles": 8,
-    "actor_step_size": 1e-1,
-    "critic_step_size": 1e-0,
-    "avg_reward_step_size": 1e-2,
-    "num_actions": 3,
-    "seed": 99,
-}
-
-rl_glue = RLGlue(WindTurbineEnvironment, ActorCriticSoftmaxAgent)
-rl_glue.rl_init(agent_info, env_info)
-
-# start env/agent
-rl_glue.rl_start()
-rl_glue.rl_step()
-
-# simple alias
-agent = rl_glue.agent
-
-print("agent next_action: {}".format(agent.last_action))
-print("agent avg reward: {}\n".format(agent.avg_reward))
-
-assert agent.last_action == 1
-#assert agent.avg_reward == -0.03139092653589793
-
-print("agent first 10 values of actor weights[0]: \n{}\n".format(agent.actor_w[0][:10]))
-print("agent first 10 values of actor weights[1]: \n{}\n".format(agent.actor_w[1][:10]))
-print("agent first 10 values of actor weights[2]: \n{}\n".format(agent.actor_w[2][:10]))
-print("agent first 10 values of critic weights: \n{}".format(agent.critic_w[:10]))
-
-#assert np.allclose(agent.actor_w[0][:10], [0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0., 0.])
-#assert np.allclose(agent.actor_w[1][:10], [0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0.01307955, 0., 0.])
-#assert np.allclose(agent.actor_w[2][:10], [-0.02615911, -0.02615911, -0.02615911, -0.02615911, -0.02615911, -0.02615911, -0.02615911, -0.02615911, 0., 0.])
-
-#assert np.allclose(agent.critic_w[:10], [-0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, -0.39238658, 0., 0.])
-'''
-
-
 # Define function to run experiment
 def run_experiment(environment, agent, environment_parameters, \
 	agent_parameters, experiment_parameters):
 
-    rl_glue = RLGlue(environment, agent)
-            
-    # sweep agent parameters
-    for num_tilings in agent_parameters['num_tilings']:
-        for num_tiles in agent_parameters["num_tiles"]:
-            for actor_ss in agent_parameters["actor_step_size"]:
-                for critic_ss in agent_parameters["critic_step_size"]:
-                    for avg_reward_ss in agent_parameters["avg_reward_step_size"]:
-                        
-                        env_info = {}
-                        agent_info = {"num_tilings": num_tilings,
-                                      "num_tiles": num_tiles,
-                                      "actor_step_size": actor_ss,
-                                      "critic_step_size": critic_ss,
-                                      "avg_reward_step_size": avg_reward_ss,
-                                      "num_actions": agent_parameters["num_actions"],
-                                      "iht_size": agent_parameters["iht_size"]}            
-            
-                        # results to save
-                        return_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
-                        exp_avg_reward_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
-                        wind_heading_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
-                        action_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
+	rl_glue = RLGlue(environment, agent)
+			
+	# sweep agent parameters
+	for num_tilings in agent_parameters['num_tilings']:
+		for num_tiles in agent_parameters["num_tiles"]:
+			for actor_ss in agent_parameters["actor_step_size"]:
+				for critic_ss in agent_parameters["critic_step_size"]:
+					for avg_reward_ss in agent_parameters["avg_reward_step_size"]:
+						
+						env_info = {}
+						agent_info = {"num_tilings": num_tilings,
+									  "num_tiles": num_tiles,
+									  "actor_step_size": actor_ss,
+									  "critic_step_size": critic_ss,
+									  "avg_reward_step_size": avg_reward_ss,
+									  "num_actions": agent_parameters["num_actions"],
+									  "iht_size": agent_parameters["iht_size"]}			
+			
+						# results to save
+						return_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
+						exp_avg_reward_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
+						wind_heading_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
+						action_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
+						policy_distrib = np.zeros((experiment_parameters["num_runs"], 360, 1 + agent_parameters["num_actions"]))
 
-                        # using tqdm we visualize progress bars 
-                        for run in tqdm(range(1, experiment_parameters["num_runs"]+1)):
-                            env_info["seed"] = run
-                            agent_info["seed"] = run
-                
-                            rl_glue.rl_init(agent_info, env_info)
-                            rl_glue.rl_start()
+						# using tqdm we visualize progress bars 
+						for run in tqdm(range(1, experiment_parameters["num_runs"]+1)):
+							env_info["seed"] = run
+							agent_info["seed"] = run
+				
+							rl_glue.rl_init(agent_info, env_info)
+							rl_glue.rl_start()
 
-                            num_steps = 0
-                            total_return = 0.
-                            return_arr = []
-                            wind_heading = 0. # MAYBE FALSE, DEPENDS ON INIT
-                            action_log = 1
+							num_steps = 0
+							total_return = 0.
+							return_arr = []
+							wind_heading = 0. # MAYBE FALSE, DEPENDS ON INIT
+							action_log = 1
 
-                            # exponential average reward without initial bias
-                            exp_avg_reward = 0.0
-                            exp_avg_reward_ss = 0.01
-                            exp_avg_reward_normalizer = 0
+							# exponential average reward without initial bias
+							exp_avg_reward = 0.0
+							exp_avg_reward_ss = 0.01
+							exp_avg_reward_normalizer = 0
 
-                            while num_steps < experiment_parameters['max_steps']:
-                                num_steps += 1
-                                
-                                rl_step_result = rl_glue.rl_step()
-                                
-                                reward, state, action, _ = rl_step_result
-                                wind_heading = state[1]
+							while num_steps < experiment_parameters['max_steps']:
+								num_steps += 1
+								
+								rl_step_result = rl_glue.rl_step()
+								
+								reward, state, action, _ = rl_step_result
+								wind_heading = state[1]
 
-                                total_return += reward
-                                return_arr.append(reward)
-                                avg_reward = rl_glue.rl_agent_message("get avg reward")
+								total_return += reward
+								return_arr.append(reward)
+								avg_reward = rl_glue.rl_agent_message("get avg reward")
 
-                                exp_avg_reward_normalizer = exp_avg_reward_normalizer + exp_avg_reward_ss * (1 - exp_avg_reward_normalizer)
-                                ss = exp_avg_reward_ss / exp_avg_reward_normalizer
-                                exp_avg_reward += ss * (reward - exp_avg_reward)
-                                
-                                return_per_step[run-1][num_steps-1] = total_return
-                                exp_avg_reward_per_step[run-1][num_steps-1] = exp_avg_reward
-                                wind_heading_per_step[run-1][num_steps-1] = wind_heading
-                                action_per_step[run-1][num_steps-1] = action
-                                                        
-                        if not os.path.exists('results'):
-                            os.makedirs('results')
-                
-                        save_name = "ActorCriticSoftmax_tilings_{}_tiledim_{}_actor_ss_{}_critic_ss_{}_avg_reward_ss_{}".format(num_tilings, num_tiles, actor_ss, critic_ss, avg_reward_ss)
-                        total_return_filename = "results/{}_total_return.npy".format(save_name)
-                        exp_avg_reward_filename = "results/{}_exp_avg_reward.npy".format(save_name)
-                        wind_heading_filename = "results/{}_wind_heading.npy".format(save_name)
-                        action_filename = "results/{}_action.npy".format(save_name)
+								exp_avg_reward_normalizer = exp_avg_reward_normalizer + exp_avg_reward_ss * (1 - exp_avg_reward_normalizer)
+								ss = exp_avg_reward_ss / exp_avg_reward_normalizer
+								exp_avg_reward += ss * (reward - exp_avg_reward)
+								
+								return_per_step[run-1][num_steps-1] = total_return
+								exp_avg_reward_per_step[run-1][num_steps-1] = exp_avg_reward
+								wind_heading_per_step[run-1][num_steps-1] = wind_heading
+								action_per_step[run-1][num_steps-1] = action
+							
+							for wh in range(-180, 180):
+								# assuming that we get the policy distribution for the last wind speed value
+								policy_distrib_array = list(get_policy_distribution(rl_glue.agent, [state[0], wh]))
+								policy_distrib_array.insert(0, wh) # add the wind heading to the policy array
+								policy_distrib[run-1][wh][:] = policy_distrib_array
 
-                        np.save(total_return_filename, return_per_step)
-                        np.save(exp_avg_reward_filename, exp_avg_reward_per_step)
-                        np.save(wind_heading_filename, wind_heading_per_step)
-                        np.save(action_filename, action_per_step)
+						if not os.path.exists('results'):
+							os.makedirs('results')
+				
+						save_name = "ActorCriticSoftmax_tilings_{}_tiledim_{}_actor_ss_{}_critic_ss_{}_avg_reward_ss_{}".format(num_tilings, num_tiles, actor_ss, critic_ss, avg_reward_ss)
+						total_return_filename = "results/{}_total_return.npy".format(save_name)
+						exp_avg_reward_filename = "results/{}_exp_avg_reward.npy".format(save_name)
+						wind_heading_filename = "results/{}_wind_heading.npy".format(save_name)
+						action_filename = "results/{}_action.npy".format(save_name)
+						policy_distrib_filename = "results/{}_policy_distrib.npy".format(save_name)
+
+						np.save(total_return_filename, return_per_step)
+						np.save(exp_avg_reward_filename, exp_avg_reward_per_step)
+						np.save(wind_heading_filename, wind_heading_per_step)
+						np.save(action_filename, action_per_step)
+						np.save(policy_distrib_filename, policy_distrib)
+
+'''
+						n_max = experiment_parameters['max_steps']
+						score_range = range(np.floor(n_max/10), np.floor(n_max/10))
+						score = np.mean(exp_avg_reward_per_step[:, score_range])
+
+
+def grid_parameters(parameters: dict[str, Iterable[Any]]) -> Iterable[dict[str, Any]]:
+	for params in product(*parameters.values()):
+		yield dict(zip(parameters.keys(), params))
+'''
+
+def get_policy_distribution(agent, state):
+	"""Gets the policy probabilistic distribution of the agent for a given state
+		Args:
+			agent (rlagent): a reinforcement learning agent such as
+			the softmax actor critic agent
+			state (Numpy array): the current state of the agent
+		Returns:
+			The policy probabilistic distribution
+	"""
+	wind_speed, wind_heading = state
+	active_tiles = agent.tc.get_tiles(wind_speed, wind_heading)
+	softmax_prob = compute_softmax_prob(agent.actor_w, active_tiles)
+
+	return softmax_prob
 
 
 #### Run Experiment
 
 # Experiment parameters
 experiment_parameters = {
-    "max_steps" : 10000, #20000,
-    "num_runs" : 1, #50
+	"max_steps" : 1000, #20000,
+	"num_runs" : 1, #50
 }
 
 # Environment parameters
@@ -506,13 +476,13 @@ environment_parameters = {}
 # over multiple values actor and critic step-sizes
 # are divided by num. tilings inside the agent
 agent_parameters = {
-    "num_tilings": [32],
-    "num_tiles": [8],
-    "actor_step_size": [2**(-2)], #[2**(-2)],
-    "critic_step_size": [2**(1)], #[2**1],
-    "avg_reward_step_size": [2**(-6)], #[2**(-6)],
-    "num_actions": 3,
-    "iht_size": 4096,
+	"num_tilings": [32],
+	"num_tiles": [8],
+	"actor_step_size": [2**(-2)], #[2**(-2)],
+	"critic_step_size": [2**(1)], #[2**1],
+	"avg_reward_step_size": [2**(-6)], #[2**(-6)],
+	"num_actions": 3,
+	"iht_size": 4096,
 }
 np.random.seed(100)
 

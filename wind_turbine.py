@@ -37,7 +37,7 @@ class wind_turbine:
 	filter_order = 4
 	b, a = butter_lowpass(rotor_cutoff, 1.0, filter_order)
 	zi = lfilter_zi(b, a)
-	angle_increment = 1.0 										# deg
+	angle_increment = 0.1 										# deg
 	control_cost = 1e-1											# MW
 	control_on = False
 
@@ -115,9 +115,11 @@ class wind_turbine:
 
 	def rotate(self, direction):
 		if direction == -1 :
+			# rotate trigo
 			self.wind_rel_heading_hist[-1] += self.angle_increment
 			self.control_on = True
 		if direction == +1 :
+			# rotate clockwise
 			self.wind_rel_heading_hist[-1] -= self.angle_increment
 			self.control_on = True
 		if direction == 0 :
