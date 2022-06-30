@@ -508,15 +508,16 @@ np.random.seed(100)
 
 # Experiment parameters
 experiment_parameters = {
-	"max_steps" : 1000, #20000,
-	"num_runs" : 1, #50
+	"max_steps" : 10000, #20000,
+	"num_runs" : 100, #50
 }
 
 # Environment parameters
 environment_parameters = {
-	"angle_start" : 0, #360*np.random.rand(1) - 180
-	"wind_heading_var" : 0*0.1,
-	"wind_speed_var" : 0*0.1,
+	"random_angle_start" : True,
+	"angle_start" : 0,
+	"wind_heading_var" : 0.1,
+	"wind_speed_var" : 0.1,
 }
 
 # Agent parameters
