@@ -176,6 +176,7 @@ class ActorCriticSoftmaxAgent(BaseAgent):
 		self.prev_tiles = None
 		self.last_action = None
 		self.step_count = None
+		self.verbose = None
 
 	def agent_init(self, agent_info={}):
 		"""Setup for the agent called when the experiment
@@ -234,6 +235,7 @@ class ActorCriticSoftmaxAgent(BaseAgent):
 		self.prev_tiles = None
 		self.last_action = None
 		self.step_count = 0
+		self.verbose = agent_info.get("verbose")
 	
 	def agent_policy(self, active_tiles):
 		""" policy of the agent
@@ -299,12 +301,13 @@ class ActorCriticSoftmaxAgent(BaseAgent):
 		Returns:
 			The action the agent is taking.
 		"""
-		print('======================================')
-		print('Entering Step ', repr(self.step_count))
-		self.step_count += 1
-		print('self.avg_reward_step_size = ', repr(self.avg_reward_step_size))
-		print('self.critic_step_size = ', repr(self.critic_step_size))
-		print('self.self.actor_step_size = ', repr(self.actor_step_size))
+		if self.verbose:
+			print('======================================')
+			print('Entering Step ', repr(self.step_count))
+			self.step_count += 1
+			print('self.avg_reward_step_size = ', repr(self.avg_reward_step_size))
+			print('self.critic_step_size = ', repr(self.critic_step_size))
+			print('self.self.actor_step_size = ', repr(self.actor_step_size))
 
 		speed, heading = state
 
@@ -316,58 +319,57 @@ class ActorCriticSoftmaxAgent(BaseAgent):
 		delta = reward - self.avg_reward \
 			+ self.critic_w[active_tiles].sum() \
 			- self.critic_w[self.prev_tiles].sum()
-		print('------------------------------------')
-		print('compute delta')
-		print('delta = ', repr(delta))
-		print('reward = ', repr(reward))
-		print('self.avg_reward = ', repr(self.avg_reward))
-		print('average reward diff = ', repr(reward - self.avg_reward))
-		print('v(S[t+1], w) = ', repr(self.critic_w[active_tiles].sum()))
-		print('v(S[t], w) = ', repr(self.critic_w[self.prev_tiles].sum()))
+		if self.verbose:
+			print('------------------------------------')
+			print('compute delta')
+			print('delta = ', repr(delta))
+			print('reward = ', repr(reward))
+			print('self.avg_reward = ', repr(self.avg_reward))
+			print('average reward diff = ', repr(reward - self.avg_reward))
+			print('v(S[t+1], w) = ', repr(self.critic_w[active_tiles].sum()))
+			print('v(S[t], w) = ', repr(self.critic_w[self.prev_tiles].sum()))
 
 		# update average reward using Equation (2)
 		self.avg_reward += self.avg_reward_step_size * delta
-		print('------------------------------------')
-		print('increment average reward')
-		print('avg_reward increment = ', repr(self.avg_reward_step_size * delta))
-		print('self.avg_reward = ', repr(self.avg_reward))
+		if self.verbose:
+			print('------------------------------------')
+			print('increment average reward')
+			print('avg_reward increment = ', repr(self.avg_reward_step_size * delta))
+			print('self.avg_reward = ', repr(self.avg_reward))
 
 		# update critic weights using Equation (3) and (5)
 		self.critic_w[self.prev_tiles] \
 			+= self.critic_step_size * delta
-		print('------------------------------------')
-		print('update critic weights')
-		print('weight increment = ', repr(self.critic_step_size * delta))
-		print('self.critic_w[self.prev_tiles] = ', repr(self.critic_w[self.prev_tiles]))
+		if self.verbose:
+			print('------------------------------------')
+			print('update critic weights')
+			print('weight increment = ', repr(self.critic_step_size * delta))
+			print('self.critic_w[self.prev_tiles] = ', repr(self.critic_w[self.prev_tiles]))
 
 		# update actor weights using Equation (4) and (6)
 		# We use self.softmax_prob saved from the previous timestep
-		print('------------------------------------')
-		print('update actor weight')
 		for a in self.actions:
 			if a == self.last_action:
 				self.actor_w[a][self.prev_tiles] \
 					+= self.actor_step_size * delta \
 					* (1 - self.softmax_prob[a])
-				print('actor increment for action', repr(a), \
-					' = ', repr(self.actor_step_size * delta \
-					* (1 - self.softmax_prob[a])))
 			else:
 				self.actor_w[a][self.prev_tiles] \
 					+= self.actor_step_size * delta \
 					* (0 - self.softmax_prob[a])
-				print('actor increment for action', repr(a), \
-					' = ', repr(self.actor_step_size * delta \
-					* (0 - self.softmax_prob[a])))
-			print('self.actor_w[', a ,'][self.prev_tiles] = ', \
-				repr(self.actor_w[a][self.prev_tiles]))
+			if self.verbose:
+				print('------------------------------------')
+				print('update actor weight')
+				print('self.actor_w[', a ,'][self.prev_tiles] = ', \
+					repr(self.actor_w[a][self.prev_tiles]))
 
 		### set current_action by calling 
 		# self.agent_policy with active_tiles
 		current_action = self.agent_policy(active_tiles)
-		print('------------------------------------')
-		print('choose new action')
-		print('action = ', repr(current_action))
+		if self.verbose:
+			print('------------------------------------')
+			print('choose new action')
+			print('action = ', repr(current_action))
 
 		self.prev_tiles = active_tiles
 		self.last_action = current_action
@@ -399,7 +401,8 @@ def run_experiment(environment, agent, environment_parameters, \
 									  "critic_step_size": critic_ss,
 									  "avg_reward_step_size": avg_reward_ss,
 									  "num_actions": agent_parameters["num_actions"],
-									  "iht_size": agent_parameters["iht_size"]}			
+									  "iht_size": agent_parameters["iht_size"],
+									  "verbose": agent_parameters["verbose"]}			
 			
 						# results to save
 						return_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
@@ -501,7 +504,7 @@ def get_policy_distribution(agent, state):
 
 # Experiment parameters
 experiment_parameters = {
-	"max_steps" : 1, #20000,
+	"max_steps" : 1000, #20000,
 	"num_runs" : 1, #50
 }
 
@@ -517,9 +520,10 @@ agent_parameters = {
 	"num_tiles": [8],
 	"actor_step_size": [2**(-2)], #[2**(-2)],
 	"critic_step_size": [2**(1)], #[2**1],
-	"avg_reward_step_size": [2**(-6)], #[2**(-6)],
+	"avg_reward_step_size": [2**(-4)], #[2**(-6)],
 	"num_actions": 3,
 	"iht_size": 4096,
+	"verbose" : False
 }
 np.random.seed(100)
 

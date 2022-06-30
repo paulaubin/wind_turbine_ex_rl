@@ -37,12 +37,15 @@ class wind_turbine:
 	filter_order = 4
 	b, a = butter_lowpass(rotor_cutoff, 1.0, filter_order)
 	zi = lfilter_zi(b, a)
-	angle_increment = 0.1 										# deg
-	control_cost = 1e-1											# MW
+	# misalignement of 2.5º corresonds to a gain of 0.1%
+	# misalignement of 1º corresponds to a gain of 0.01%
+	# misaligenemnt of 8.1º corresponds to a gain of 1%
+	angle_increment = 1  										# deg
+	control_cost = 0*1e-1											# MW
 	control_on = False
 
 	wind_sp = 0													# m.s-1
-	wind_rel = -30 												# deg
+	wind_rel = 30 												# deg
 	wind_sp_hist = np.array(wind_sp * np.ones(filter_order+1))	# m.s-1
 	wind_rel_heading_hist = np.array(wind_rel * np.ones(filter_order+1))# deg
 	power_hist_filt = np.array(np.zeros(filter_order+1))  		# MW
