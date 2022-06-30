@@ -394,7 +394,7 @@ def run_experiment(environment, agent, environment_parameters, \
 				for critic_ss in agent_parameters["critic_step_size"]:
 					for avg_reward_ss in agent_parameters["avg_reward_step_size"]:
 						
-						env_info = {}
+						env_info = environment_parameters
 						agent_info = {"num_tilings": num_tilings,
 									  "num_tiles": num_tiles,
 									  "actor_step_size": actor_ss,
@@ -473,12 +473,15 @@ def run_experiment(environment, agent, environment_parameters, \
 						np.save(action_filename, action_per_step)
 						np.save(policy_distrib_filename, policy_distrib)
 
-'''
+
 						n_max = experiment_parameters['max_steps']
-						score_range = range(np.floor(n_max/10), np.floor(n_max/10))
+						score_range = range(int(np.floor(0.9*n_max)), \
+							int(np.floor(n_max)))
 						score = np.mean(exp_avg_reward_per_step[:, score_range])
+						print('score = ', repr(score))
 
 
+'''
 def grid_parameters(parameters: dict[str, Iterable[Any]]) -> Iterable[dict[str, Any]]:
 	for params in product(*parameters.values()):
 		yield dict(zip(parameters.keys(), params))
@@ -501,15 +504,20 @@ def get_policy_distribution(agent, state):
 
 
 #### Run Experiment
+np.random.seed(100)
 
 # Experiment parameters
 experiment_parameters = {
 	"max_steps" : 1000, #20000,
-	"num_runs" : 5, #50
+	"num_runs" : 1, #50
 }
 
 # Environment parameters
-environment_parameters = {}
+environment_parameters = {
+	"angle_start" : 0, #360*np.random.rand(1) - 180
+	"wind_heading_var" : 0*0.1,
+	"wind_speed_var" : 0*0.1,
+}
 
 # Agent parameters
 # Each element is an array because we will be later sweeping
@@ -518,15 +526,20 @@ environment_parameters = {}
 agent_parameters = {
 	"num_tilings": [32],
 	"num_tiles": [8],
-	"actor_step_size": [2**(-2)], #[2**(-2)],
-	"critic_step_size": [2**(1)], #[2**1],
-	"avg_reward_step_size": [2**(-4)], #[2**(-6)],
+	"actor_step_size": [2**(-1)], #[2**(-2)],
+	"critic_step_size": [2**(-1)], #[2**1],
+	"avg_reward_step_size": [2**(-0)], #[2**(-6)],
 	"num_actions": 3,
 	"iht_size": 4096,
 	"verbose" : False
 }
-np.random.seed(100)
-
+'''
+param_grid = {
+	"actor_step_size" : agent_parameters["actor_step_size"]
+	"critic_step_size": agent_parameters["critic_step_size"]
+	"avg_reward_step_size" : agent_parameters["avg_reward_step_size"]
+}
+'''
 
 current_env = WindTurbineEnvironment
 current_agent = ActorCriticSoftmaxAgent

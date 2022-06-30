@@ -45,7 +45,7 @@ class wind_turbine:
 	control_on = False
 
 	wind_sp = 0													# m.s-1
-	wind_rel = 30 												# deg
+	wind_rel = 0 												# deg
 	wind_sp_hist = np.array(wind_sp * np.ones(filter_order+1))	# m.s-1
 	wind_rel_heading_hist = np.array(wind_rel * np.ones(filter_order+1))# deg
 	power_hist_filt = np.array(np.zeros(filter_order+1))  		# MW
@@ -137,7 +137,7 @@ class wind:
 	__speed_rate_mean = 0 			# m.s-1
 	__speed_rate_std  = 0.0 		# m.s-1
 	__heading_rate_mean = 0 		# deg
-	__heading_rate_std  = 0*0.1 		# deg
+	__heading_rate_std  = 0 		# deg
 	__time_step = 1 				# s
 	__seed = 10 		# the random seed to repeat the results
 	speed : float 					# m.s-1
@@ -171,71 +171,71 @@ class wind:
 
 @dataclass
 class simu:
-	__wind = wind()
-	__wt = wind_turbine()
+	wind = wind()
+	wt = wind_turbine()
 	__max_steps = float('inf')
 	steps = 0
-	state = {'wind_speed' :__wt.wind_sp, \
-		'wind_rel_heading' : __wt.wind_rel, \
+	state = {'wind_speed' :wt.wind_sp, \
+		'wind_rel_heading' : wt.wind_rel, \
 		'is_terminal' : False}
 	reward : float
-	__wind_heading_log = __wind.heading
+	wind_heading_log = wind.heading
 
 	def __init__(self):
 		self.reward = self.compute_reward
 
 	def reset(self): # need to check that this is a proper reset
-		self.__wind = wind()
-		self.__wt = wind_turbine()
+		self.wind = wind()
+		self.wt = wind_turbine()
 		self.steps = 0
-		self.state = {'wind_speed' :self.__wt.wind_sp, \
-			'wind_rel_heading' : self.__wt.wind_rel, \
+		self.state = {'wind_speed' :self.wt.wind_sp, \
+			'wind_rel_heading' : self.wt.wind_rel, \
 			'is_terminal' : False}
 		self.reward = self.compute_reward()
-		self.__wind_heading_log = self.__wind.heading
+		self.wind_heading_log = self.wind.heading
 
 	def step(self, action):
 		self.steps += 1
 
 		# Build the reward
-		self.__wt.rotate(action)
-		self.__wt.update_power_output()
+		self.wt.rotate(action)
+		self.wt.update_power_output()
 
 		# Generate the next state
 		# Iterate the wind
-		self.__wind.generate_wind()
-		wind_heading_diff = self.__wind.heading \
-			- self.__wind_heading_log
-		self.__wind_heading_log = self.__wind.heading
+		self.wind.generate_wind()
+		wind_heading_diff = self.wind.heading \
+			- self.wind_heading_log
+		self.wind_heading_log = self.wind.heading
 
 		# Iterate the power generated
-		self.__wt.get_wind(self.__wind.speed, wind_heading_diff)
+		self.wt.get_wind(self.wind.speed, wind_heading_diff)
 
 		# Log the data
 		is_terminal = True if self.steps>=self.__max_steps else False
-		self.state = {'wind_speed' :self.__wt.wind_sp, \
-			'wind_rel_heading' : self.__wt.wind_rel, \
+		self.state = {'wind_speed' :self.wt.wind_sp, \
+			'wind_rel_heading' : self.wt.wind_rel, \
 			'is_terminal' : is_terminal}
 		self.reward = self.compute_reward()
 
 	def compute_reward(self):
-		reward = self.__wt.power_balance - self.__wt.max_power_balance
-		if np.abs(self.__wt.wind_rel) > 90:
-			reward = - (1 + (np.abs(self.__wt.wind_rel) - 90)/90) \
-				* (self.__wt.max_power_balance \
-				+ self.__wt.control_cost)
+		reward = self.wt.power_balance - self.wt.max_power_balance
+		if np.abs(self.wt.wind_rel) > 90:
+			reward = - (1 + (np.abs(self.wt.wind_rel) - 90)/90) \
+				* (self.wt.max_power_balance \
+				+ self.wt.control_cost)
 		return reward
 
 
 	def get_power_balance(self):
-		return self.__wt.power_balance
+		return self.wt.power_balance
 
 	def get_max_power_balance(self):
-		return self.__wt.max_power_balance
+		return self.wt.max_power_balance
 
 
 class WindTurbineEnvironment(BaseEnvironment):
-	__simu = simu()
+	simu = simu()
 
 	def __init__(self):
 		reward = None
@@ -251,11 +251,21 @@ class WindTurbineEnvironment(BaseEnvironment):
 			observation, boolean
 			indicating if it's terminal.
 		"""
-		self.__simu.reset()
+		self.simu.reset()
+		print('self.simu.wt = ', repr(self.simu.wt))
+		self.simu.wt.wind_rel = env_info["angle_start"]
+		self.simu.wind.__heading_rate_std = \
+			env_info["wind_heading_var"]
+		self.simu.wind.__speed_rate_std = \
+			env_info["wind_speed_var"]
+		print('-------sanity check---------')
+		print('self.simu.wt.wind_rel = ', repr(self.simu.wt.wind_rel))
+		print('self.simu.wind.__heading_rate_std = ', repr(self.simu.wind.__heading_rate_std))
+		print('self.simu.wind.__speed_rate_std = ', repr(self.simu.wind.__speed_rate_std))
 		self.reward_obs_term \
-			= (self.__simu.reward, [self.__simu.state['wind_speed'], \
-				self.__simu.state['wind_rel_heading']], \
-				self.__simu.state['is_terminal'])
+			= (self.simu.reward, [self.simu.state['wind_speed'], \
+				self.simu.state['wind_rel_heading']], \
+				self.simu.state['is_terminal'])
 
 
 	def env_start(self):
@@ -265,8 +275,8 @@ class WindTurbineEnvironment(BaseEnvironment):
 		Returns:
 			The first state observation from the environment.
 		"""
-		obs = [self.__simu.state['wind_speed'], \
-			self.__simu.state['wind_rel_heading']]
+		obs = [self.simu.state['wind_speed'], \
+			self.simu.state['wind_rel_heading']]
 		return obs
 
 
@@ -280,18 +290,18 @@ class WindTurbineEnvironment(BaseEnvironment):
 			state observation,
 				and boolean indicating if it's terminal.
 		"""
-		self.__simu.step(action - 1)
+		self.simu.step(action - 1)
 		self.reward_obs_term \
-			= (self.__simu.reward, [self.__simu.state['wind_speed'], \
-				self.__simu.state['wind_rel_heading']], \
-				self.__simu.state['is_terminal'])
+			= (self.simu.reward, [self.simu.state['wind_speed'], \
+				self.simu.state['wind_rel_heading']], \
+				self.simu.state['is_terminal'])
 
 		return self.reward_obs_term
 
 
 	def env_cleanup(self):
 		"""Cleanup done after the environment ends"""
-		self.__simu.reset()
+		self.simu.reset()
 
 
 	#def env_message(self, message):
