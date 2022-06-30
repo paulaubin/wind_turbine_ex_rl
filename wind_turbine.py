@@ -134,7 +134,7 @@ class wind:
 	__speed_rate_mean = 0 			# m.s-1
 	__speed_rate_std  = 0.0 		# m.s-1
 	__heading_rate_mean = 0 		# deg
-	__heading_rate_std  = 0.1 		# deg
+	__heading_rate_std  = 0*0.1 		# deg
 	__time_step = 1 				# s
 	__seed = 10 		# the random seed to repeat the results
 	speed : float 					# m.s-1
