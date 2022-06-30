@@ -252,16 +252,11 @@ class WindTurbineEnvironment(BaseEnvironment):
 			indicating if it's terminal.
 		"""
 		self.simu.reset()
-		print('self.simu.wt = ', repr(self.simu.wt))
 		self.simu.wt.wind_rel = env_info["angle_start"]
 		self.simu.wind.__heading_rate_std = \
 			env_info["wind_heading_var"]
 		self.simu.wind.__speed_rate_std = \
 			env_info["wind_speed_var"]
-		print('-------sanity check---------')
-		print('self.simu.wt.wind_rel = ', repr(self.simu.wt.wind_rel))
-		print('self.simu.wind.__heading_rate_std = ', repr(self.simu.wind.__heading_rate_std))
-		print('self.simu.wind.__speed_rate_std = ', repr(self.simu.wind.__speed_rate_std))
 		self.reward_obs_term \
 			= (self.simu.reward, [self.simu.state['wind_speed'], \
 				self.simu.state['wind_rel_heading']], \
