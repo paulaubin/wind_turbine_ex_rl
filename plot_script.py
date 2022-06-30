@@ -56,25 +56,38 @@ def plot_result(agent_parameters, results_folder):
 	policy_distrib_action_trigo = policy_distrib[:,:,1]
 	policy_distrib_action_do_nothing = policy_distrib[:,:,2]
 	policy_distrib_action_clockwise = policy_distrib[:,:,3]
+	mean_policy_angle = np.mean(policy_angle, 0)
+	mean_policy_distrib_action_trigo = \
+		np.mean(policy_distrib_action_trigo, 0)
+	mean_policy_distrib_action_do_nothing = \
+		np.mean(policy_distrib_action_do_nothing, 0)
+	mean_policy_distrib_action_clockwise = \
+		np.mean(policy_distrib_action_clockwise, 0)
+	std_policy_distrib_action_trigo = \
+		np.std(policy_distrib_action_trigo, 0)
+	std_policy_distrib_action_do_nothing = \
+		np.std(policy_distrib_action_do_nothing, 0)
+	std_policy_distrib_action_clockwise = \
+		np.std(policy_distrib_action_clockwise, 0)
 
-	'''
 	ax1 = plt.subplot(3, 1, 1)
-	plt.plot(mean_total_return_data, label=label)
-	plt.fill_between(range(len(mean_total_return_data)), \
-		mean_total_return_data - std_total_return_data,\
-		mean_total_return_data + std_total_return_data,
-		alpha=.1 )
-	plt.xlabel('Training Steps')
-	plt.ylabel('Total Return')
-	plt.tick_params('x', labelbottom=False)
-	plt.legend()
-	plt.grid()
-	'''
+	plt.scatter(mean_policy_angle, mean_policy_distrib_action_trigo, label='rotate trigo')
+	plt.scatter(mean_policy_angle, mean_policy_distrib_action_do_nothing, label='do nothing')
+	plt.scatter(mean_policy_angle, mean_policy_distrib_action_clockwise, label='clockwise')
+	plt.fill_between(mean_policy_angle, \
+		mean_policy_distrib_action_trigo - std_policy_distrib_action_trigo, \
+		mean_policy_distrib_action_trigo + std_policy_distrib_action_trigo,
+		alpha = .1)
+	plt.fill_between(mean_policy_angle, \
+		mean_policy_distrib_action_do_nothing - std_policy_distrib_action_do_nothing, \
+		mean_policy_distrib_action_do_nothing + std_policy_distrib_action_do_nothing,
+		alpha = .1)
 
-	ax1 = plt.subplot(3, 1, 1)
-	plt.scatter(policy_angle, policy_distrib_action_trigo, label='rotate trigo')
-	plt.scatter(policy_angle, policy_distrib_action_do_nothing, label='do nothing')
-	plt.scatter(policy_angle, policy_distrib_action_clockwise, label='clockwise')
+	plt.fill_between(mean_policy_angle, \
+		mean_policy_distrib_action_clockwise - std_policy_distrib_action_clockwise, \
+		mean_policy_distrib_action_clockwise + std_policy_distrib_action_clockwise,
+		alpha = .1)
+	
 	plt.xlabel('Angle (deg)')
 	plt.ylabel('Action probability')
 	plt.legend()

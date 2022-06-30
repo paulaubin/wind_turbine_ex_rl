@@ -505,7 +505,7 @@ def get_policy_distribution(agent, state):
 # Experiment parameters
 experiment_parameters = {
 	"max_steps" : 1000, #20000,
-	"num_runs" : 1, #50
+	"num_runs" : 5, #50
 }
 
 # Environment parameters
