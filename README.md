@@ -21,7 +21,11 @@ When the wind turbine is rotating, the power output gets a penalty (it lowers)
 
 The wind speed is constant but the wind heading experiences a slight random walk with time
 
+Below is an illusrtation of how the wind turbine environment works
+
 ![Example of wind turbine in action](https://github.com/paulaubin/wind_turbine_ex_rl/blob/master/plot/environment_example.png)
+
+No strategy is implemented here, the action taken are only to get a feeling of how it works
 
 There are 3 parameters that can be set on the environment :
 * The relative wind heading at start
@@ -31,6 +35,8 @@ There are 3 parameters that can be set on the environment :
 In the code you will see that the power could be filter to induce a delay due to the inertia of the rotor (same thing could apply to actions by the way). Yet this funcionnality is not used because I am not sure if it breaks the MDP framework.
 
 ## The reinforement learning agent
-It is a softmax actor-critic as described in Reinforcement Learning: An Introduction, 2nd Edition [http://incompleteideas.net/book/RLbook2020.pdf] by Sutton and Bartho.
+It is an average reward softmax actor-critic as described in Reinforcement Learning: An Introduction, 2nd Edition [http://incompleteideas.net/book/RLbook2020.pdf] by Sutton and Bartho.
 
-It learns how to derive a stochastic policy that tends to optimality on the given environment. An example can be found here averaged other 100 runs on 10 000 timesteps.
+It learns how to derive a stochastic policy that tends to optimality on the given environment. An illustration can be found below, where the agent was trained over 10 000 timesteps and averaged over 100 episods.
+
+![Policy example after training](https://github.com/paulaubin/wind_turbine_ex_rl/blob/master/plot/ang_rand_whv0p1_wsp0p1_step10k_run100_score_0p0028.png)
