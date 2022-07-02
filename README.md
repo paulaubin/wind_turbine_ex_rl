@@ -21,7 +21,7 @@ When the wind turbine is rotating, the power output gets a penalty (it lowers)
 
 The wind speed is constant but the wind heading experiences a slight random walk with time
 
-![Example of wind turbine in action](plot/environment_example)
+![Example of wind turbine in action](https://github.com/paulaubin/wind_turbine_ex_rl/blob/master/plot/environment_example.png)
 
 There are 3 parameters that can be set on the environment :
 * The relative wind heading at start
