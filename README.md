@@ -37,6 +37,6 @@ In the code you will see that the power could be filter to induce a delay due to
 ## The reinforement learning agent
 It is an average reward softmax actor-critic as described in Reinforcement Learning: An Introduction, 2nd Edition [http://incompleteideas.net/book/RLbook2020.pdf] by Sutton and Bartho.
 
-It learns how to derive a stochastic policy that tends to optimality on the given environment. An illustration can be found below, where the agent was trained over 10 000 timesteps and averaged over 100 episods and with random relative angle at start,
+It learns how to derive a stochastic policy that tends to optimality on the given environment. An illustration can be found below, where the agent was trained over 10 000 timesteps and averaged over 100 episods and with random relative angle at start
 
 ![Policy example after training](https://github.com/paulaubin/wind_turbine_ex_rl/blob/master/plot/ang_rand_whv0p1_wsp0p1_step10k_run100_score_0p0028.png)
