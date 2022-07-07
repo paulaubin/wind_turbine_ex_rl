@@ -74,25 +74,7 @@ def plot_result(agent_parameters, results_folder):
 	ax.set_zlabel('Action probability', fontweight='bold')
 	plt.show()
 
-	fig2 = plt.figure()
-	# Average over the wind speed
-	'''wind_headings = policy_distrib['wh'].unique()
-	print('wind_headings = ', repr(wind_headings))
-	policy_distrib_ws0 = pd.DataFrame({'wh' : wind_headings})
-	pol_avg = np.zeros((len(policy_distrib_ws0), len(policy_distrib['action_proba_avg'][0])))
-	for i in range(len(policy_distrib_ws0)):
-		wh = policy_distrib_ws0['wh'][i]
-		print('wh = ', repr(wh))
-		print('policy_distrib[policy_distrib[wh] == wh] = ', repr(policy_distrib[policy_distrib['wh'] == wh]))
-		print('policy_distrib[policy_distrib[wh] == wh][trigo_avg] = ', repr(policy_distrib[policy_distrib[wh] == wh][trigo_avg]))
-		print('policy_distrib[policy_distrib[wh] == wh][trigo_avg].mean() = ', repr(policy_distrib[policy_distrib['wh'] == wh]['trigo_avg'].mean()))
-		pol_avg[i][0] = policy_distrib[policy_distrib['wh'] == wh]['trigo_avg'].mean()
-		pol_avg[i][1] = policy_distrib[policy_distrib['wh'] == wh]['nothing_avg'].mean()
-		pol_avg[i][2] = policy_distrib[policy_distrib['wh'] == wh]['clockwise_avg'].mean()
-	policy_distrib_ws0['trigo_avg'] = pol_avg[:][0]
-	policy_distrib_ws0['nothing_avg'] = pol_avg[:][1]
-	policy_distrib_ws0['clockwise_avg'] = pol_avg[:][2]'''
-	
+	fig2 = plt.figure()	
 	ax1 = plt.subplot(3, 1, 1)
 	# Slice plot
 	ws_slice = 10

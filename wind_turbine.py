@@ -21,8 +21,6 @@ from rlglue_environment import BaseEnvironment
 
 
 # Define the wind turbine
-### TODO : SAME METHODS AS FOR
-### https://github.com/andnp/coursera-rl-glue/blob/master/RLGlue/environment.py
 @dataclass
 class wind_turbine:
 	"""
@@ -41,7 +39,7 @@ class wind_turbine:
 	# misalignement of 1º corresponds to a gain of 0.01%
 	# misaligenemnt of 8.1º corresponds to a gain of 1%
 	angle_increment = 1  										# deg
-	control_cost = 0*1e-1											# MW
+	control_cost = 2e-3											# MW
 	control_on = False
 
 	wind_sp = 0													# m.s-1
@@ -115,11 +113,11 @@ class wind_turbine:
 			self.wind_rel_heading_hist[i-1] = self.wind_rel_heading_hist[i]
 		self.wind_sp_hist[-1] = wind_speed
 		self.wind_rel_heading_hist[-1] += differential_wind_heading
-		self.wind_rel_heading_hist = self.wind_rel_heading_hist + 180 % 360 - 180
+		self.wind_rel_heading_hist = (self.wind_rel_heading_hist + 180) % 360 - 180
 		self.data_counter += 1
 
 		self.wind_sp = self.wind_sp_hist[-1]
-		self.wind_rel = self.wind_rel_heading_hist[-1]
+		self.wind_rel = (self.wind_rel_heading_hist[-1] + 180) % 360 - 180
 
 	def rotate(self, direction):
 		if direction == -1 :
@@ -266,7 +264,6 @@ class WindTurbineEnvironment(BaseEnvironment):
 			angle_start = env_info["angle_start"]
 		if env_info["random_speed_start"]:
 			# We could use a gaussian distribution centered on 10 and not hardcode 30 as max wind speed here
-			print('using random speed start')
 			speed_start = float(30*np.random.rand(1))
 		else:
 			speed_start = env_info["speed_start"]
@@ -326,7 +323,7 @@ class WindTurbineEnvironment(BaseEnvironment):
 ### Test simu class ###
 def plot_wind_turbine_example():
 	sm = simu()
-	sm.reset(10, 0.0, 0.0)
+	sm.reset(170, 10.0, 0.0, 0.0)
 	wind_speed = np.array([])
 	wind_heading = np.array([])
 	power = np.array([])
@@ -358,7 +355,7 @@ def plot_wind_turbine_example():
 
 	t = np.arange(len(wind_speed))
 	ax1 = plt.subplot(2, 1, 1)
-	#plt.plot(t, wind_speed, label='wind speed from wt [m/s]')
+	plt.plot(t, wind_speed, label='wind speed from wt [m/s]')
 	plt.plot(t, wind_heading, label='wind heading relative to wind turbine [deg]')
 	plt.xlabel('Time [sec]')
 	plt.tick_params('x', labelbottom=False)
@@ -368,7 +365,7 @@ def plot_wind_turbine_example():
 	ax2 = plt.subplot(2, 1, 2, sharex=ax1)
 	plt.plot(t, power, label='wind turbine power')
 	plt.plot(t, action_log, label='action')
-	#plt.plot(t, reward, label='reward')
+	plt.plot(t, reward, label='reward')
 	plt.xlabel('Time [sec]')
 	plt.ylabel('Power [MW]')
 	plt.legend(loc='upper left')

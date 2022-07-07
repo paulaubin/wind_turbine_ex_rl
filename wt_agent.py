@@ -543,15 +543,15 @@ np.random.seed(100)
 # Experiment parameters
 experiment_parameters = {
 	"max_steps" : 20000, #20000,
-	"num_runs" : 10, #50
+	"num_runs" : 100, #50
 }
 
 # Environment parameters
 environment_parameters = {
-	"random_angle_start" : True,
-	"random_speed_start" : False,
+	"random_angle_start" : False,
+	"random_speed_start" : True,
 	"speed_start" : 10,
-	"angle_start" : 0,
+	"angle_start" : 180,
 	"wind_heading_var" : 0.1,
 	"wind_speed_var" : 0.1,
 }
@@ -563,9 +563,9 @@ environment_parameters = {
 agent_parameters = {
 	"num_tilings": [32],
 	"num_tiles": [8],
-	"actor_step_size": [2**(-1)], #[2**(-2)],
-	"critic_step_size": [2**(-1)], #[2**1],
-	"avg_reward_step_size": [2**(-0)], #[2**(-6)],
+	"actor_step_size": [2**(-0)], #[2**(-2)],
+	"critic_step_size": [2**(-4)], #[2**1],
+	"avg_reward_step_size": [2**(-1)], #[2**(-6)], list(np.logspace(-6, 3, 10, base=2))
 	"num_actions": 3,
 	"iht_size": 16384, #4096,
 	"verbose" : False
