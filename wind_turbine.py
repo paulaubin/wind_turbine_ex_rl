@@ -152,7 +152,7 @@ class wind:
 
 	def __init__(self, wind_heading_var=0.0, wind_speed_var=0.0, \
 			speed=None, heading=None):
-		self.speed = 10 if speed==None else wind_speed
+		self.speed = 10 if speed==None else speed
 		self.__speed_init = self.speed
 		self.heading = 180 if heading==None else heading
 		self.__heading_init = self.heading
@@ -192,9 +192,9 @@ class simu:
 	def __init__(self):
 		self.reward = self.compute_reward
 
-	def reset(self, angle_start, \
+	def reset(self, angle_start, speed_start, \
 		wind_heading_var, wind_speed_var): # need to check that this is a proper reset
-		self.__wind = wind(wind_heading_var, wind_speed_var)
+		self.__wind = wind(wind_heading_var, wind_speed_var, speed_start)
 		self.__wt = wind_turbine(angle_start)
 		self.steps = 0
 		self.state = {'wind_speed' :self.__wt.wind_sp, \
@@ -260,13 +260,19 @@ class WindTurbineEnvironment(BaseEnvironment):
 			observation, boolean
 			indicating if it's terminal.
 		"""
-		if env_info["random_angle_start"] :
+		if env_info["random_angle_start"]:
 			angle_start = float(360*np.random.rand(1) - 180)
-		else :
+		else:
 			angle_start = env_info["angle_start"]
+		if env_info["random_speed_start"]:
+			# We could use a gaussian distribution centered on 10 and not hardcode 30 as max wind speed here
+			print('using random speed start')
+			speed_start = float(30*np.random.rand(1))
+		else:
+			speed_start = env_info["speed_start"]
 		wind_heading_var = env_info["wind_heading_var"]
 		wind_speed_var = env_info["wind_speed_var"]
-		self.__simu.reset(angle_start, wind_heading_var, wind_speed_var)
+		self.__simu.reset(angle_start, speed_start, wind_heading_var, wind_speed_var)
 		self.reward_obs_term \
 			= (self.__simu.reward, [self.__simu.state['wind_speed'], \
 				self.__simu.state['wind_rel_heading']], \

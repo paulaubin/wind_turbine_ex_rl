@@ -12,6 +12,8 @@ to comply with https://github.com/LucasBoTang/Coursera_Reinforcement_Learning/bl
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from mpl_toolkits.mplot3d import Axes3D
 
 def plot_result(agent_parameters, results_folder):
 	avg_reward_filename = results_folder + '/' + \
@@ -34,7 +36,8 @@ def plot_result(agent_parameters, results_folder):
 	total_return_data = np.load(total_return_filename)
 	wind_heading = np.load(wind_heading_filename)
 	action = np.load(action_filename)
-	policy_distrib = np.load(policy_distrib_filename)
+	policy_distrib = pd.read_pickle(policy_distrib_filename)
+	#print('policy_distrib = ', repr(policy_distrib))
 
 	label = 'actor_ss = ' \
 		+ str(agent_parameters['actor_step_size']).strip('[]') \
@@ -52,40 +55,62 @@ def plot_result(agent_parameters, results_folder):
 	mean_action = np.mean(action, 0)
 	last_wind_heading = wind_heading[-1]
 	first_wind_heading = wind_heading[0]
-	policy_angle = policy_distrib[:,:,0]
-	policy_distrib_action_trigo = policy_distrib[:,:,1]
-	policy_distrib_action_do_nothing = policy_distrib[:,:,2]
-	policy_distrib_action_clockwise = policy_distrib[:,:,3]
-	mean_policy_angle = np.mean(policy_angle, 0)
-	mean_policy_distrib_action_trigo = \
-		np.mean(policy_distrib_action_trigo, 0)
-	mean_policy_distrib_action_do_nothing = \
-		np.mean(policy_distrib_action_do_nothing, 0)
-	mean_policy_distrib_action_clockwise = \
-		np.mean(policy_distrib_action_clockwise, 0)
-	std_policy_distrib_action_trigo = \
-		np.std(policy_distrib_action_trigo, 0)
-	std_policy_distrib_action_do_nothing = \
-		np.std(policy_distrib_action_do_nothing, 0)
-	std_policy_distrib_action_clockwise = \
-		np.std(policy_distrib_action_clockwise, 0)
 
+	policy_distrib['trigo_avg'] = policy_distrib.action_proba_avg.apply(lambda x : x[0])
+	policy_distrib['nothing_avg'] = policy_distrib.action_proba_avg.apply(lambda x : x[1])
+	policy_distrib['clockwise_avg'] = policy_distrib.action_proba_avg.apply(lambda x : x[2])
+
+	policy_distrib['trigo_std'] = policy_distrib.action_proba_std.apply(lambda x : x[0])
+	policy_distrib['nothing_std'] = policy_distrib.action_proba_std.apply(lambda x : x[1])
+	policy_distrib['clockwise_std'] = policy_distrib.action_proba_std.apply(lambda x : x[2])
+	
+	fig = plt.figure()
+	ax = Axes3D(fig)
+	surf_trigo = ax.plot_trisurf(policy_distrib.ws, policy_distrib.wh, policy_distrib.trigo_avg, alpha = 0.5)
+	surf_nothing = ax.plot_trisurf(policy_distrib.ws, policy_distrib.wh, policy_distrib.nothing_avg, alpha = 0.5)
+	surf_clockwise = ax.plot_trisurf(policy_distrib.ws, policy_distrib.wh, policy_distrib.clockwise_avg, alpha = 0.5)
+	ax.set_xlabel('Wind speed (m/s)', fontweight='bold')
+	ax.set_ylabel('Wind heading (º)', fontweight='bold')
+	ax.set_zlabel('Action probability', fontweight='bold')
+	plt.show()
+
+	fig2 = plt.figure()
+	# Average over the wind speed
+	'''wind_headings = policy_distrib['wh'].unique()
+	print('wind_headings = ', repr(wind_headings))
+	policy_distrib_ws0 = pd.DataFrame({'wh' : wind_headings})
+	pol_avg = np.zeros((len(policy_distrib_ws0), len(policy_distrib['action_proba_avg'][0])))
+	for i in range(len(policy_distrib_ws0)):
+		wh = policy_distrib_ws0['wh'][i]
+		print('wh = ', repr(wh))
+		print('policy_distrib[policy_distrib[wh] == wh] = ', repr(policy_distrib[policy_distrib['wh'] == wh]))
+		print('policy_distrib[policy_distrib[wh] == wh][trigo_avg] = ', repr(policy_distrib[policy_distrib[wh] == wh][trigo_avg]))
+		print('policy_distrib[policy_distrib[wh] == wh][trigo_avg].mean() = ', repr(policy_distrib[policy_distrib['wh'] == wh]['trigo_avg'].mean()))
+		pol_avg[i][0] = policy_distrib[policy_distrib['wh'] == wh]['trigo_avg'].mean()
+		pol_avg[i][1] = policy_distrib[policy_distrib['wh'] == wh]['nothing_avg'].mean()
+		pol_avg[i][2] = policy_distrib[policy_distrib['wh'] == wh]['clockwise_avg'].mean()
+	policy_distrib_ws0['trigo_avg'] = pol_avg[:][0]
+	policy_distrib_ws0['nothing_avg'] = pol_avg[:][1]
+	policy_distrib_ws0['clockwise_avg'] = pol_avg[:][2]'''
+	
 	ax1 = plt.subplot(3, 1, 1)
-	plt.scatter(mean_policy_angle, mean_policy_distrib_action_trigo, label='rotate trigo')
-	plt.scatter(mean_policy_angle, mean_policy_distrib_action_do_nothing, label='do nothing')
-	plt.scatter(mean_policy_angle, mean_policy_distrib_action_clockwise, label='clockwise')
-	plt.fill_between(mean_policy_angle, \
-		mean_policy_distrib_action_trigo - std_policy_distrib_action_trigo, \
-		mean_policy_distrib_action_trigo + std_policy_distrib_action_trigo,
+	# Slice plot
+	ws_slice = 10
+	plt.scatter(policy_distrib[policy_distrib['ws']==ws_slice]['wh'], policy_distrib[policy_distrib['ws']==ws_slice]['trigo_avg'], label='rotate trigo')
+	plt.scatter(policy_distrib[policy_distrib['ws']==ws_slice]['wh'], policy_distrib[policy_distrib['ws']==ws_slice]['nothing_avg'], label='do nothing')
+	plt.scatter(policy_distrib[policy_distrib['ws']==ws_slice]['wh'], policy_distrib[policy_distrib['ws']==ws_slice]['clockwise_avg'], label='clockwise')
+	plt.fill_between(policy_distrib[policy_distrib['ws']==ws_slice]['wh'],
+		policy_distrib[policy_distrib['ws']==ws_slice]['trigo_avg'] - policy_distrib[policy_distrib['ws']==ws_slice]['trigo_std'], \
+		policy_distrib[policy_distrib['ws']==ws_slice]['trigo_avg'] + policy_distrib[policy_distrib['ws']==ws_slice]['trigo_std'],
 		alpha = .1)
-	plt.fill_between(mean_policy_angle, \
-		mean_policy_distrib_action_do_nothing - std_policy_distrib_action_do_nothing, \
-		mean_policy_distrib_action_do_nothing + std_policy_distrib_action_do_nothing,
+	plt.fill_between(policy_distrib[policy_distrib['ws']==ws_slice]['wh'], \
+		policy_distrib[policy_distrib['ws']==ws_slice]['nothing_avg'] - policy_distrib[policy_distrib['ws']==ws_slice]['nothing_std'], \
+		policy_distrib[policy_distrib['ws']==ws_slice]['nothing_avg'] + policy_distrib[policy_distrib['ws']==ws_slice]['nothing_std'],
 		alpha = .1)
 
-	plt.fill_between(mean_policy_angle, \
-		mean_policy_distrib_action_clockwise - std_policy_distrib_action_clockwise, \
-		mean_policy_distrib_action_clockwise + std_policy_distrib_action_clockwise,
+	plt.fill_between(policy_distrib[policy_distrib['ws']==ws_slice]['wh'], \
+		policy_distrib[policy_distrib['ws']==ws_slice]['clockwise_avg'] - policy_distrib[policy_distrib['ws']==ws_slice]['clockwise_std'], \
+		policy_distrib[policy_distrib['ws']==ws_slice]['clockwise_avg'] + policy_distrib[policy_distrib['ws']==ws_slice]['clockwise_std'],
 		alpha = .1)
 	
 	plt.xlabel('Angle (deg)')

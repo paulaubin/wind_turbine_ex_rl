@@ -10,6 +10,7 @@
 # ---------------------------------------------------------------------------
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 import os
 import itertools
@@ -402,14 +403,34 @@ def run_experiment(environment, agent, environment_parameters, \
 									  "avg_reward_step_size": avg_reward_ss,
 									  "num_actions": agent_parameters["num_actions"],
 									  "iht_size": agent_parameters["iht_size"],
-									  "verbose": agent_parameters["verbose"]}			
-			
+									  "verbose": agent_parameters["verbose"]}
+
+						policy_test_wind_speed_range = range(5,16)			
+						policy_test_wind_heading_range = range(-180,181)
+
 						# results to save
 						return_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
 						exp_avg_reward_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
 						wind_heading_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
 						action_per_step = np.zeros((experiment_parameters["num_runs"], experiment_parameters["max_steps"]))
-						policy_distrib = np.zeros((experiment_parameters["num_runs"], 360, 1 + agent_parameters["num_actions"]))
+						policy_distrib = pd.DataFrame(data = {'ws' : [ws for ws in policy_test_wind_speed_range for wh in policy_test_wind_heading_range], \
+							'wh' : [wh for ws in policy_test_wind_speed_range for wh in policy_test_wind_heading_range]})
+						
+						# used to calculte the mean and the std iteratively 
+						#policy_sum = {ws : {wh : np.zeros(agent_info["num_actions"]) \
+						#	for wh in policy_distrib["wind_heading_range"]} \
+						#	for ws in policy_distrib["wind_speed_range"]}
+						# used to calculate the std iteratively
+						#policy_sum_sq = {ws : {wh : np.zeros(agent_info["num_actions"]) \
+						#	for wh in policy_distrib["wind_heading_range"]} \
+						#	for ws in policy_distrib["wind_speed_range"]}
+						#policy_distrib['policy_sum'] = list(np.zeros((len(policy_distrib), agent_info["num_actions"])))
+						#policy_distrib['policy_sum_sq'] = list(np.zeros((len(policy_distrib), agent_info["num_actions"])))
+						run_count = 0
+						policy_sum = np.zeros((len(policy_distrib), agent_info["num_actions"]))
+						policy_sum_sq = np.zeros((len(policy_distrib), agent_info["num_actions"]))
+						#print('policy_distrib = ', repr(policy_distrib))
+
 
 						# using tqdm we visualize progress bars 
 						for run in tqdm(range(1, experiment_parameters["num_runs"]+1)):
@@ -451,16 +472,30 @@ def run_experiment(environment, agent, environment_parameters, \
 								wind_heading_per_step[run-1][num_steps-1] = wind_heading
 								action_per_step[run-1][num_steps-1] = action
 							
-							for wh in range(-180, 180):
-								# assuming that we get the policy distribution for the last wind speed value
-								policy_distrib_array = list(get_policy_distribution(rl_glue.agent, [state[0], wh]))
-								policy_distrib_array.insert(0, wh) # add the wind heading to the policy array
-								policy_distrib[run-1][wh][:] = policy_distrib_array
+							run_count += 1
+							for i in range(len(policy_distrib)):
+								ws = policy_distrib['ws'][i]
+								wh = policy_distrib['wh'][i]
+								cur_policy = np.array(get_policy_distribution(rl_glue.agent, [ws, wh]))
+								policy_sum[i] += cur_policy
+								policy_sum_sq[i] += cur_policy**2
+								#print('ws = ', repr(ws))
+								#print('wh = ', repr(wh))
+								#print('cur_policy = ', repr(cur_policy))
+								#print('policy_sum = ', repr(policy_sum))
+								#print('policy_sum_sq = ', repr(policy_sum_sq))
+						
+						policy_distrib['action_proba_avg'] = list(policy_sum/run_count)
+						policy_distrib['action_proba_std'] = list(np.sqrt(policy_sum_sq/run_count \
+							- (policy_sum/run_count)**2))
+						#print('policy_distrib = ', repr(policy_distrib))
+
 
 						if not os.path.exists('results'):
 							os.makedirs('results')
 				
-						save_name = "ActorCriticSoftmax_tilings_{}_tiledim_{}_actor_ss_{}_critic_ss_{}_avg_reward_ss_{}".format(num_tilings, num_tiles, actor_ss, critic_ss, avg_reward_ss)
+						save_name = "ActorCriticSoftmax_tilings_{}_tiledim_{}_actor_ss_{}_critic_ss_{}_avg_reward_ss_{}"\
+							.format(num_tilings, num_tiles, actor_ss, critic_ss, avg_reward_ss)
 						total_return_filename = "results/{}_total_return.npy".format(save_name)
 						exp_avg_reward_filename = "results/{}_exp_avg_reward.npy".format(save_name)
 						wind_heading_filename = "results/{}_wind_heading.npy".format(save_name)
@@ -471,8 +506,7 @@ def run_experiment(environment, agent, environment_parameters, \
 						np.save(exp_avg_reward_filename, exp_avg_reward_per_step)
 						np.save(wind_heading_filename, wind_heading_per_step)
 						np.save(action_filename, action_per_step)
-						np.save(policy_distrib_filename, policy_distrib)
-
+						policy_distrib.to_pickle(policy_distrib_filename)
 
 						n_max = experiment_parameters['max_steps']
 						score_range = range(int(np.floor(0.9*n_max)), \
@@ -508,13 +542,15 @@ np.random.seed(100)
 
 # Experiment parameters
 experiment_parameters = {
-	"max_steps" : 10000, #20000,
-	"num_runs" : 100, #50
+	"max_steps" : 20000, #20000,
+	"num_runs" : 10, #50
 }
 
 # Environment parameters
 environment_parameters = {
 	"random_angle_start" : True,
+	"random_speed_start" : False,
+	"speed_start" : 10,
 	"angle_start" : 0,
 	"wind_heading_var" : 0.1,
 	"wind_speed_var" : 0.1,
@@ -531,7 +567,7 @@ agent_parameters = {
 	"critic_step_size": [2**(-1)], #[2**1],
 	"avg_reward_step_size": [2**(-0)], #[2**(-6)],
 	"num_actions": 3,
-	"iht_size": 4096,
+	"iht_size": 16384, #4096,
 	"verbose" : False
 }
 '''
