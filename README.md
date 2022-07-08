@@ -39,4 +39,9 @@ It is an average reward softmax actor-critic as described in Reinforcement Learn
 
 It learns how to derive a stochastic policy that tends to optimality on the given environment. An illustration can be found below, where the agent was trained over 10 000 timesteps and averaged over 100 episods and with random relative angle at start
 
+## Training on a case without penalty for action
+
+On the figure below, the agent was trained on an environment that does not penalises action. The figure matches our intuition where it should head to 0 angle for any offset angle. The training steps where 10 000 and the episods where 100 with random relative angle at start
+
+
 ![Policy example after training](https://github.com/paulaubin/wind_turbine_ex_rl/blob/master/plot/ang_rand_whv0p1_wsp0p1_step10k_run100_score_0p0028.png)

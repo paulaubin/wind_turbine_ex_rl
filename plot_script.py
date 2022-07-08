@@ -13,7 +13,9 @@ to comply with https://github.com/LucasBoTang/Coursera_Reinforcement_Learning/bl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from mpl_toolkits.mplot3d import Axes3D
+#from mpl_toolkits.mplot3d import Axes3D
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 def plot_result(agent_parameters, results_folder):
 	avg_reward_filename = results_folder + '/' + \
@@ -64,7 +66,7 @@ def plot_result(agent_parameters, results_folder):
 	policy_distrib['nothing_std'] = policy_distrib.action_proba_std.apply(lambda x : x[1])
 	policy_distrib['clockwise_std'] = policy_distrib.action_proba_std.apply(lambda x : x[2])
 	
-	fig = plt.figure()
+	'''fig = plt.figure()
 	ax = Axes3D(fig)
 	surf_trigo = ax.plot_trisurf(policy_distrib.ws, policy_distrib.wh, policy_distrib.trigo_avg, alpha = 0.5)
 	surf_nothing = ax.plot_trisurf(policy_distrib.ws, policy_distrib.wh, policy_distrib.nothing_avg, alpha = 0.5)
@@ -72,7 +74,20 @@ def plot_result(agent_parameters, results_folder):
 	ax.set_xlabel('Wind speed (m/s)', fontweight='bold')
 	ax.set_ylabel('Wind heading (º)', fontweight='bold')
 	ax.set_zlabel('Action probability', fontweight='bold')
-	plt.show()
+	plt.show()'''
+	wsu = policy_distrib['ws'].unique()
+	whu = policy_distrib['wh'].unique()
+	pol_trigo_avg = policy_distrib.trigo_avg.to_numpy().reshape(len(wsu), len(whu))
+	pol_nothing_avg = policy_distrib.nothing_avg.to_numpy().reshape(len(wsu), len(whu))
+	pol_clockwise_avg = policy_distrib.clockwise_avg.to_numpy().reshape(len(wsu), len(whu))
+	fig = go.Figure(data=[go.Surface(x = wsu, y = whu, z = pol_trigo_avg.T, opacity = 0.7, name='rotate trigo', \
+							cmin = 0, cmax = 1, colorscale = [[0, 'rgb(236, 243, 248)'], [1, 'rgb(54, 108, 150)']]),
+						go.Surface(x = wsu, y = whu, z = pol_nothing_avg.T, opacity = 0.7, name='do nothing', \
+							cmin = 0, cmax = 1, colorscale = [[0, 'rgb(253, 243, 231)'], [1, 'rgb(240, 131, 15)']]),
+						go.Surface(x = wsu, y = whu, z = pol_clockwise_avg.T, opacity = 0.7, name='rotate clockwise', \
+							cmin = 0, cmax = 1, colorscale = [[0, 'rgb(239, 247, 237)'], [1, 'rgb(74, 142, 62)']])])
+	fig.update_layout(title='Probability of action')
+	fig.show()
 
 	fig2 = plt.figure()	
 	ax1 = plt.subplot(3, 1, 1)
