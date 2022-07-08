@@ -543,7 +543,7 @@ np.random.seed(100)
 # Experiment parameters
 experiment_parameters = {
 	"max_steps" : 15000, #20000,
-	"num_runs" : 10, #50
+	"num_runs" : 1, #50
 }
 
 # Environment parameters
