@@ -56,3 +56,5 @@ We can also have a look at the full policy over wind speed and wind heading on t
 {% include index.html %}
 
 <iframe id="igraph" scrolling="no" style="border:none;" seamless="seamless" src="https://paulaubin.github.io/wind_turbine_ex_rl/" height="525" width="100%"></iframe>
+
+[![3D Rendering of the policy](index.png)](https://paulaubin.github.io/wind_turbine_ex_rl)
