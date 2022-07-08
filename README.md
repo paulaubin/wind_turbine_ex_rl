@@ -1,6 +1,6 @@
 # Implement a RL agent to maximize the production of a wind turbine
 
-## Before you start
+## Disclaimer
 This repo was done for personnal use, the code could be simplified and respect some conding rules. Yet if you are interested in the project please feel free to send a message and I will do some clean up.
 
 Some files were taken from external sources such as :
@@ -54,3 +54,5 @@ We can also have a look at the full policy over wind speed and wind heading on t
 
 ![3D Policy example with action penalty](https://github.com/paulaubin/wind_turbine_ex_rl/blob/master/plot/3d_plot/embed_test.html)
 {% include plot/3d_plot/embed_test.html %}
+
+<iframe id="igraph" scrolling="no" style="border:none;" seamless="seamless" src="https://paulaubin.github.io/wind_turbine_ex_rl/" height="525" width="100%"></iframe>
