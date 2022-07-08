@@ -52,4 +52,4 @@ Here a penalty of 1% of the turbine maximum power is applied at every time step 
 
 We can also have a look at the full policy over wind speed and wind heading on the graph below
 
-{% include plot/3d_plot/figure.html %}
+{% include plot/3d_plot/embed_test.html %}
