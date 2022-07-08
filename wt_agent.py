@@ -405,7 +405,7 @@ def run_experiment(environment, agent, environment_parameters, \
 									  "iht_size": agent_parameters["iht_size"],
 									  "verbose": agent_parameters["verbose"]}
 
-						policy_test_wind_speed_range = range(5,16)			
+						policy_test_wind_speed_range = range(0,31)			
 						policy_test_wind_heading_range = range(-180,181)
 
 						# results to save
@@ -542,8 +542,8 @@ np.random.seed(100)
 
 # Experiment parameters
 experiment_parameters = {
-	"max_steps" : 20000, #20000,
-	"num_runs" : 100, #50
+	"max_steps" : 15000, #20000,
+	"num_runs" : 10, #50
 }
 
 # Environment parameters

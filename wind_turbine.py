@@ -39,7 +39,7 @@ class wind_turbine:
 	# misalignement of 1º corresponds to a gain of 0.01%
 	# misaligenemnt of 8.1º corresponds to a gain of 1%
 	angle_increment = 1  										# deg
-	control_cost = 2e-3											# MW
+	control_cost = 2e-2											# MW
 	control_on = False
 
 	wind_sp = 0													# m.s-1
