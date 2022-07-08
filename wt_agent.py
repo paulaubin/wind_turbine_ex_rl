@@ -472,6 +472,11 @@ def run_experiment(environment, agent, environment_parameters, \
 								wind_heading_per_step[run-1][num_steps-1] = wind_heading
 								action_per_step[run-1][num_steps-1] = action
 							
+								# Restart angle
+								if experiment_parameters['restart_in_run']:
+									if num_steps % 10000 == 0:
+										rl_glue.environment.env_init(env_info)
+
 							run_count += 1
 							for i in range(len(policy_distrib)):
 								ws = policy_distrib['ws'][i]
@@ -479,16 +484,10 @@ def run_experiment(environment, agent, environment_parameters, \
 								cur_policy = np.array(get_policy_distribution(rl_glue.agent, [ws, wh]))
 								policy_sum[i] += cur_policy
 								policy_sum_sq[i] += cur_policy**2
-								#print('ws = ', repr(ws))
-								#print('wh = ', repr(wh))
-								#print('cur_policy = ', repr(cur_policy))
-								#print('policy_sum = ', repr(policy_sum))
-								#print('policy_sum_sq = ', repr(policy_sum_sq))
 						
 						policy_distrib['action_proba_avg'] = list(policy_sum/run_count)
 						policy_distrib['action_proba_std'] = list(np.sqrt(policy_sum_sq/run_count \
 							- (policy_sum/run_count)**2))
-						#print('policy_distrib = ', repr(policy_distrib))
 
 
 						if not os.path.exists('results'):
@@ -513,6 +512,8 @@ def run_experiment(environment, agent, environment_parameters, \
 							int(np.floor(n_max)))
 						score = np.mean(exp_avg_reward_per_step[:, score_range])
 						print('score = ', repr(score))
+						if experiment_parameters['restart_in_run']:
+							print('|!| Warning ! Score may not represent value that converged due to restart_in_run being True |!|')
 
 
 '''
@@ -542,13 +543,15 @@ np.random.seed(100)
 
 # Experiment parameters
 experiment_parameters = {
-	"max_steps" : 15000, #20000,
-	"num_runs" : 1, #50
+	"max_steps" : 200000, #20000,
+	"num_runs" : 100, #50
+	"restart_in_run" : True # Caution, do not use to estimate score !
 }
 
 # Environment parameters
 environment_parameters = {
-	"random_angle_start" : False,
+	"random_angle_start" : True,
+	"far_random_start" : True, # requires random_angle_start to be true to be active
 	"random_speed_start" : True,
 	"speed_start" : 10,
 	"angle_start" : 180,
