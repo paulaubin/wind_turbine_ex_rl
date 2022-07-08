@@ -15,6 +15,7 @@ import numpy as np
 import pandas as pd
 #from mpl_toolkits.mplot3d import Axes3D
 import plotly.graph_objects as go
+import plotly.io as pio
 from plotly.subplots import make_subplots
 
 def plot_result(agent_parameters, results_folder):
@@ -87,6 +88,7 @@ def plot_result(agent_parameters, results_folder):
 						go.Surface(x = wsu, y = whu, z = pol_clockwise_avg.T, opacity = 0.7, name='rotate clockwise', \
 							cmin = 0, cmax = 1, colorscale = [[0, 'rgb(239, 247, 237)'], [1, 'rgb(74, 142, 62)']])])
 	fig.update_layout(title='Probability of action')
+	pio.write_html(fig, file='index.html', auto_open=True)
 	fig.show()
 
 	fig2 = plt.figure()	
