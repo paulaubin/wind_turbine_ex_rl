@@ -93,8 +93,8 @@ def plot_result(agent_parameters, results_folder):
                     yaxis_title='wind heading (º)',
                     zaxis_title='action probability',
 					yaxis = dict(tickvals= list(np.linspace(-180, 180, 37)))))
-	#pio.write_html(fig, file='index.html', auto_open=True)
-	fig.show()
+	pio.write_html(fig, file='index.html', auto_open=True)
+	#fig.show()
 
 	fig2 = plt.figure()	
 	ax1 = plt.subplot(3, 1, 1)

@@ -39,7 +39,7 @@ class wind_turbine:
 	# misalignement of 1º corresponds to a gain of 0.01%
 	# misaligenemnt of 8.1º corresponds to a gain of 1%
 	angle_increment = 1  										# deg
-	control_cost = 4e-3											# MW
+	control_cost = 2e-3											# MW
 	control_on = False
 
 	wind_sp = 0													# m.s-1
@@ -259,7 +259,10 @@ class WindTurbineEnvironment(BaseEnvironment):
 			indicating if it's terminal.
 		"""
 		if env_info["random_angle_start"]:
-			angle_start = float(360*np.random.rand(1) - 180)
+			if env_info["far_random_start"]:
+				angle_start = float((350 + 20*np.random.rand(1))%360 - 180)
+			else:
+				angle_start = float(360*np.random.rand(1) - 180)
 		else:
 			angle_start = env_info["angle_start"]
 		if env_info["random_speed_start"]:
