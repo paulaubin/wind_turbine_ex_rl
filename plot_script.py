@@ -81,14 +81,19 @@ def plot_result(agent_parameters, results_folder):
 	pol_trigo_avg = policy_distrib.trigo_avg.to_numpy().reshape(len(wsu), len(whu))
 	pol_nothing_avg = policy_distrib.nothing_avg.to_numpy().reshape(len(wsu), len(whu))
 	pol_clockwise_avg = policy_distrib.clockwise_avg.to_numpy().reshape(len(wsu), len(whu))
-	fig = go.Figure(data=[go.Surface(x = wsu, y = whu, z = pol_trigo_avg.T, opacity = 0.7, name='rotate trigo', \
+	fig = go.Figure(data=[go.Surface(x = wsu, y = whu, z = pol_trigo_avg.T, opacity = 1, name='rotate trigo', \
 							cmin = 0, cmax = 1, colorscale = [[0, 'rgb(236, 243, 248)'], [1, 'rgb(54, 108, 150)']]),
-						go.Surface(x = wsu, y = whu, z = pol_nothing_avg.T, opacity = 0.7, name='do nothing', \
+						go.Surface(x = wsu, y = whu, z = pol_nothing_avg.T, opacity = 1, name='do nothing', \
 							cmin = 0, cmax = 1, colorscale = [[0, 'rgb(253, 243, 231)'], [1, 'rgb(240, 131, 15)']]),
-						go.Surface(x = wsu, y = whu, z = pol_clockwise_avg.T, opacity = 0.7, name='rotate clockwise', \
+						go.Surface(x = wsu, y = whu, z = pol_clockwise_avg.T, opacity = 1, name='rotate clockwise', \
 							cmin = 0, cmax = 1, colorscale = [[0, 'rgb(239, 247, 237)'], [1, 'rgb(74, 142, 62)']])])
-	fig.update_layout(title='Probability of action')
-	pio.write_html(fig, file='index.html', auto_open=True)
+	fig.update_layout(title='Action probability map')
+	fig.update_layout(scene = dict(
+                    xaxis_title='wind speed (m/s)',
+                    yaxis_title='wind heading (º)',
+                    zaxis_title='action probability',
+					yaxis = dict(tickvals= list(np.linspace(-180, 180, 37)))))
+	#pio.write_html(fig, file='index.html', auto_open=True)
 	fig.show()
 
 	fig2 = plt.figure()	

@@ -52,9 +52,6 @@ Here a penalty of 1% of the turbine maximum power is applied at every time step 
 
 We can also have a look at the full policy over wind speed and wind heading on the graph below
 
-![3D Policy example with action penalty](https://github.com/paulaubin/wind_turbine_ex_rl/blob/master/plot/3d_plot/embed_test.html)
-{% include index.html %}
-
-<iframe id="igraph" scrolling="no" style="border:none;" seamless="seamless" src="https://paulaubin.github.io/wind_turbine_ex_rl/" height="525" width="100%"></iframe>
+You can clik on the figure below to open an interactive tab
 
 [![3D Rendering of the policy](index.png)](https://paulaubin.github.io/wind_turbine_ex_rl)
