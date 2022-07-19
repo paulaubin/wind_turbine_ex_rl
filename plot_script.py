@@ -18,7 +18,9 @@ import plotly.graph_objects as go
 import plotly.io as pio
 from plotly.subplots import make_subplots
 
-def plot_result(agent_parameters, results_folder):
+def plot_result(agent_parameters, results_folder, figure_counter):
+	plt.rcParams.update({'figure.max_open_warning': 0})
+
 	avg_reward_filename = results_folder + '/' + \
 		get_pre_filename(agent_parameters) \
 		+ '_exp_avg_reward.npy'
@@ -76,6 +78,7 @@ def plot_result(agent_parameters, results_folder):
 	ax.set_ylabel('Wind heading (º)', fontweight='bold')
 	ax.set_zlabel('Action probability', fontweight='bold')
 	plt.show()'''
+	'''
 	wsu = policy_distrib['ws'].unique()
 	whu = policy_distrib['wh'].unique()
 	pol_trigo_avg = policy_distrib.trigo_avg.to_numpy().reshape(len(wsu), len(whu))
@@ -92,8 +95,10 @@ def plot_result(agent_parameters, results_folder):
                     xaxis_title='wind speed (m/s)',
                     yaxis_title='wind heading (º)',
                     zaxis_title='action probability',
-					yaxis = dict(tickvals= list(np.linspace(-180, 180, 37)))))
+					yaxis = dict(tickvals= list(np.linspace(-180, 180, 37))),
+					zaxis = dict(range= [0,1])))
 	pio.write_html(fig, file='index.html', auto_open=True)
+	'''
 	#fig.show()
 
 	fig2 = plt.figure()	
@@ -118,6 +123,7 @@ def plot_result(agent_parameters, results_folder):
 		alpha = .1)
 	
 	plt.xlabel('Angle (deg)')
+	plt.ylim([0, 1])
 	plt.ylabel('Action probability')
 	plt.legend()
 	plt.grid()
@@ -150,8 +156,8 @@ def plot_result(agent_parameters, results_folder):
 
 	fig = plt.gcf()
 	fig.set_size_inches(12, 8)
-
-	plt.show()
+	plt.savefig('gif/result_' + str(figure_counter) + ' ' + label + '.png')
+	plt.pause(0.1)
 
 
 def get_pre_filename(agent_parameters):

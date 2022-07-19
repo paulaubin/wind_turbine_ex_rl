@@ -260,7 +260,7 @@ class WindTurbineEnvironment(BaseEnvironment):
 		"""
 		if env_info["random_angle_start"]:
 			if env_info["far_random_start"]:
-				angle_start = float((350 + 20*np.random.rand(1))%360 - 180)
+				angle_start = float((260 + 200*np.random.rand(1))%360 - 180)
 			else:
 				angle_start = float(360*np.random.rand(1) - 180)
 		else:
