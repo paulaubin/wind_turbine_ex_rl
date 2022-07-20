@@ -102,7 +102,7 @@ def plot_result(agent_parameters, results_folder, figure_counter):
 	#fig.show()
 
 	fig2 = plt.figure()	
-	ax1 = plt.subplot(3, 1, 1)
+	ax1 = plt.subplot(4, 1, 1)
 	# Slice plot
 	ws_slice = 10
 	plt.scatter(policy_distrib[policy_distrib['ws']==ws_slice]['wh'], policy_distrib[policy_distrib['ws']==ws_slice]['trigo_avg'], label='rotate trigo')
@@ -128,18 +128,25 @@ def plot_result(agent_parameters, results_folder, figure_counter):
 	plt.legend()
 	plt.grid()
 
-	ax2 = plt.subplot(3, 1, 2)
+	ax2 = plt.subplot(4, 1, 2, sharex=ax1)
+	plt.scatter(policy_distrib[policy_distrib['ws']==ws_slice]['wh'], policy_distrib[policy_distrib['ws']==ws_slice]['state_value'], label='state value')
+	plt.xlabel('Angle (deg)')
+	plt.ylabel('Value')
+	plt.legend()
+	plt.grid()
+
+	ax3 = plt.subplot(4, 1, 3)
 	plt.plot(mean_avg_reward_data, label=label)
 	plt.fill_between(range(len(mean_avg_reward_data)), \
 		mean_avg_reward_data - std_avg_reward_data,\
 		mean_avg_reward_data + std_avg_reward_data,
 		alpha=.1 )
 	plt.xlabel('Training Steps')
-	plt.ylabel('Exponential Average Reward')
+	plt.ylabel('Exp Average Reward')
 	plt.legend()
 	plt.grid()
 
-	ax3 = plt.subplot(3, 1, 3, sharex=ax2)
+	ax4 = plt.subplot(4, 1, 4, sharex=ax3)
 	plt.plot(mean_wind_heading, label='mean wind heading')
 	plt.fill_between(range(len(mean_wind_heading)), \
 		mean_wind_heading - std_wind_heading,\
@@ -150,12 +157,12 @@ def plot_result(agent_parameters, results_folder, figure_counter):
 			#label='wind heading ' + str(i))
 	#plt.plot(10 * (mean_action - 1), label='10x mean action')
 	plt.xlabel('Training Steps')
-	plt.ylabel('Wind heading and action')
+	plt.ylabel('Wind heading')
 	plt.legend()
 	plt.grid()
 
 	fig = plt.gcf()
-	fig.set_size_inches(12, 8)
+	fig.set_size_inches(14, 8)
 	plt.savefig('gif/result_' + str(figure_counter) + ' ' + label + '.png')
 	plt.pause(0.1)
 

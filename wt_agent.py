@@ -71,7 +71,7 @@ class WindTurbineTileCoder:
 		returns:
 		tiles -- np.array, active tiles
 		"""
-		wind_speed_scaled = 1/np.exp(wind_speed/15.0) \
+		wind_speed_scaled = (1 - 1/np.exp(wind_speed/15.0)) \
 			* self.num_tiles
 		wind_heading_scaled = wind_heading * np.pi/180 \
 			* self.num_tiles
@@ -82,22 +82,6 @@ class WindTurbineTileCoder:
 
 		return np.array(tiles)
 
-''' CHECK TILINGS INVESTIGATION SHOULD BE CONTINUED
-speed = np.linspace(0, 20, num=20)
-heading = np.linspace(-180, 180, num=36)
-test_obs = list(itertools.product(speed, heading))
-wttc = WindTurbineTileCoder(iht_size=4096, \
-	num_tilings=2, num_tiles=2)
-result=[]
-for obs in test_obs:
-	speed, heading = obs
-	tiles = wttc.get_tiles(wind_speed=speed, wind_heading=heading)
-	print('speed = ', repr(speed))
-	print('heading = ', repr(heading))
-	print('tiles = ', repr(tiles))
-	result.append(tiles)
-print('tiles = ', repr(tiles))
-'''
 
 def compute_softmax_prob(actor_w, tiles):
 	"""
@@ -139,31 +123,6 @@ def compute_softmax_prob(actor_w, tiles):
 
 	return softmax_prob
 
-'''
-# CHECK SOFTMAX
-iht_size = 4096
-num_tilings = 8
-num_tiles = 8
-test_tc = WindTurbineTileCoder(iht_size=iht_size, \
-		num_tilings=num_tilings, num_tiles=num_tiles)
-num_actions = 3
-actions = list(range(num_actions))
-actor_w = np.zeros((len(actions), iht_size))
-# setting actor weights such that state-action
-# preferences are always [-1, 1, 2]
-actor_w[0] = -1./num_tilings
-actor_w[1] = 1./num_tilings
-actor_w[2] = 2./num_tilings
-# obtain active_tiles from state
-state = [0, -180]
-speed, heading = state
-active_tiles = test_tc.get_tiles(speed, heading)
-# compute softmax probability
-softmax_prob = compute_softmax_prob(actor_w, active_tiles)
-print('softmax probability: {}'.format(softmax_prob))
-assert np.allclose(softmax_prob, \
-	[0.03511903, 0.25949646, 0.70538451])
-'''
 
 class ActorCriticSoftmaxAgent(BaseAgent):
 	def __init__(self):
@@ -398,6 +357,8 @@ def run_experiment(environment, agent, environment_parameters, \
 				for critic_ss in agent_parameters["critic_step_size"]:
 					for avg_reward_ss in agent_parameters["avg_reward_step_size"]:
 						
+						np.random.seed(100) # ONLY TO PERFORM GRID SEARCH, SHOULD BE COMMENTED OTHERWISE
+
 						env_info = environment_parameters
 						agent_info = {"num_tilings": num_tilings,
 									  "num_tiles": num_tiles,
@@ -420,6 +381,7 @@ def run_experiment(environment, agent, environment_parameters, \
 							'wh' : [wh for ws in policy_test_wind_speed_range for wh in policy_test_wind_heading_range]})
 						policy_distrib['action_proba_avg'] = 0*policy_distrib['wh']
 						policy_distrib['action_proba_std'] = 0*policy_distrib['wh']
+						policy_distrib['state_value'] = 0*policy_distrib['wh']
 						
 						# used to calculte the mean and the std iteratively 
 						policy_iterate_counter = 0
@@ -479,6 +441,7 @@ def run_experiment(environment, agent, environment_parameters, \
 										policy_iterate_counter += 1
 										policy_sum, policy_sum_sq = update_policy_sum(rl_glue, policy_distrib, policy_sum, policy_sum_sq)
 										policy_distrib = compute_policy_distrib(policy_iterate_counter, policy_distrib, policy_sum, policy_sum_sq)
+										policy_distrib = compute_state_value(rl_glue, policy_distrib)
 
 										# save the data
 										data_to_save = {}
@@ -504,6 +467,7 @@ def run_experiment(environment, agent, environment_parameters, \
 						policy_iterate_counter += 1
 						policy_sum, policy_sum_sq = update_policy_sum(rl_glue, policy_distrib, policy_sum, policy_sum_sq)
 						policy_distrib = compute_policy_distrib(policy_iterate_counter, policy_distrib, policy_sum, policy_sum_sq)
+						policy_distrib = compute_state_value(rl_glue, policy_distrib)
 
 						# Save the data
 						data_to_save = {}
@@ -516,7 +480,7 @@ def run_experiment(environment, agent, environment_parameters, \
 
 						# Should be put in a different function for evaluating score only with a fixed policy
 						n_max = experiment_parameters['max_steps']
-						score_range = range(int(np.floor(0.9*n_max)), \
+						score_range = range(int(np.floor(0.5*n_max)), \
 							int(np.floor(n_max)))
 						score = np.mean(exp_avg_reward_per_step[:, score_range])
 						print('score = ', repr(score))
@@ -547,28 +511,6 @@ def save_results(agent_info, data_to_save):
 	data_to_save['policy_distrib'].to_pickle(policy_distrib_filename)
 
 
-def update_policy_sum(rl_glue, policy_distrib, policy_sum, policy_sum_sq):
-	for i in range(len(policy_distrib)):
-		ws = policy_distrib['ws'][i]
-		wh = policy_distrib['wh'][i]
-		cur_policy = np.array(get_policy_distribution(rl_glue.agent, [ws, wh]))
-		policy_sum[i] += cur_policy
-		policy_sum_sq[i] += cur_policy**2
-	return policy_sum, policy_sum_sq
-
-
-def compute_policy_distrib(iterate_counter, policy_distrib, policy_sum, policy_sum_sq):				
-	policy_distrib['action_proba_avg'] = list(policy_sum/iterate_counter)
-	warnings.filterwarnings('error')
-	try:
-		policy_distrib['action_proba_std'] = list(np.sqrt(policy_sum_sq/iterate_counter \
-			- (policy_sum/iterate_counter)**2))
-	except Warning as warn:
-		print('RuntimeWarning : ', warn)
-		print('iterate_counter = ', iterate_counter)
-	return policy_distrib
-
-
 def get_policy_distribution(agent, state):
 	"""Gets the policy probabilistic distribution of the agent for a given state
 		Args:
@@ -585,23 +527,60 @@ def get_policy_distribution(agent, state):
 	return softmax_prob
 
 
+def update_policy_sum(rl_glue, policy_distrib, policy_sum, policy_sum_sq):
+	for i in range(len(policy_distrib)):
+		ws = policy_distrib['ws'][i]
+		wh = policy_distrib['wh'][i]
+		cur_policy = np.array(get_policy_distribution(rl_glue.agent, [ws, wh]))
+		policy_sum[i] += cur_policy
+		policy_sum_sq[i] += cur_policy**2
+	return policy_sum, policy_sum_sq
+
+
+def compute_policy_distrib(iterate_counter, policy_distrib, policy_sum, policy_sum_sq):			
+	policy_distrib['action_proba_avg'] = list(policy_sum/iterate_counter)
+	warnings.filterwarnings('error')
+	try:
+		policy_distrib['action_proba_std'] = list(np.sqrt(policy_sum_sq/iterate_counter \
+			- (policy_sum/iterate_counter)**2))
+	except Warning as warn:
+		print('RuntimeWarning : ', warn)
+		print('iterate_counter = ', iterate_counter)
+	return policy_distrib
+
+
+def get_state_value(agent, state):
+	wind_speed, wind_heading = state
+	active_tiles = agent.tc.get_tiles(wind_speed, wind_heading)
+	state_value = agent.critic_w[active_tiles].sum()
+	return state_value
+
+def compute_state_value(rl_glue, policy_distrib):
+	sv = np.zeros(len(policy_distrib))
+	for i in range(len(policy_distrib)):
+		ws = policy_distrib['ws'][i]
+		wh = policy_distrib['wh'][i]
+		sv[i] = get_state_value(rl_glue.agent, [ws, wh])
+	policy_distrib['state_value'] = sv
+	return policy_distrib
+
 #### Run Experiment
 np.random.seed(100)
 
 # Experiment parameters
 experiment_parameters = {
-	"max_steps" : 2000000,
-	"num_runs" : 5, #50
-	"restart_in_run" : True # Caution, do not use to estimate score !
+	"max_steps" : 20000,
+	"num_runs" : 1, #50
+	"restart_in_run" : False # Caution, do not use to estimate score !
 }
 
 # Environment parameters
 environment_parameters = {
-	"random_angle_start" : True,
-	"far_random_start" : True, # requires random_angle_start to be true to be active
+	"random_angle_start" : False,
+	"far_random_start" : False, # requires random_angle_start to be true to be active
 	"random_speed_start" : False,
 	"speed_start" : 10,
-	"angle_start" : 90,
+	"angle_start" : -90,
 	"wind_heading_var" : 0.1,
 	"wind_speed_var" : 0.1,
 }
@@ -613,9 +592,9 @@ environment_parameters = {
 agent_parameters = {
 	"num_tilings": [64],
 	"num_tiles": [8],
-	"actor_step_size": [2**(-6)],#list(np.logspace(-6, -2, 5, base=2)),
-	"critic_step_size": [2**(-2)], #list(np.logspace(-4, -1, 4, base=2)),
-	"avg_reward_step_size": [2**(-6)], #[2**(-4)], #[2**(-1)], #[2**(-4)],
+	"actor_step_size": list(np.logspace(-3, -1, 3, base=2)),
+	"critic_step_size": list(np.logspace(-1, 1, 3, base=2)),
+	"avg_reward_step_size": list(np.logspace(-4, -2, 3, base=2)),
 	"num_actions": 3,
 	"iht_size": 32768, #4096,
 	"verbose" : False
