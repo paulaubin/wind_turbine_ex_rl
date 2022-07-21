@@ -71,14 +71,13 @@ class WindTurbineTileCoder:
 		returns:
 		tiles -- np.array, active tiles
 		"""
-		wind_speed_scaled = (1 - 1/np.exp(wind_speed/15.0)) \
-			* self.num_tiles
-		wind_heading_scaled = wind_heading * np.pi/180 \
-			* self.num_tiles
+		#wind_speed_scaled = (1 - 1/np.exp(wind_speed/15.0)) * self.num_tiles
+		wind_speed_scaled = np.min([wind_speed/30, 1]) * self.num_tiles
+		wind_heading_scaled = (wind_heading / 360 + 0.5) * self.num_tiles
 
 		tiles = tc.tileswrap(self.iht, self.num_tilings, \
 			[wind_speed_scaled, wind_heading_scaled], \
-			wrapwidths=[self.num_tiles, False])
+			wrapwidths=[False, self.num_tiles])
 
 		return np.array(tiles)
 
@@ -434,7 +433,8 @@ def run_experiment(environment, agent, environment_parameters, \
 							
 								# Restart angle
 								if experiment_parameters['restart_in_run']:
-									if exp_avg_reward > -1e-2 or num_steps % 30000 == 0:
+									#if exp_avg_reward > -1e-2 or num_steps % 20000 == 0:
+									if num_steps % 20000 == 0:
 										n_restarts += 1
 
 										# probe the policy, the update used to be at the end of each episod
@@ -569,9 +569,9 @@ np.random.seed(100)
 
 # Experiment parameters
 experiment_parameters = {
-	"max_steps" : 20000,
+	"max_steps" : 100,
 	"num_runs" : 1, #50
-	"restart_in_run" : False # Caution, do not use to estimate score !
+	"restart_in_run" : True # Caution, do not use to estimate score !
 }
 
 # Environment parameters
@@ -579,8 +579,8 @@ environment_parameters = {
 	"random_angle_start" : False,
 	"far_random_start" : False, # requires random_angle_start to be true to be active
 	"random_speed_start" : False,
-	"speed_start" : 10,
-	"angle_start" : -90,
+	"speed_start" : 30,
+	"angle_start" : 90,
 	"wind_heading_var" : 0.1,
 	"wind_speed_var" : 0.1,
 }
@@ -590,13 +590,13 @@ environment_parameters = {
 # over multiple values actor and critic step-sizes
 # are divided by num. tilings inside the agent
 agent_parameters = {
-	"num_tilings": [64],
+	"num_tilings": [32], # [64],
 	"num_tiles": [8],
-	"actor_step_size": list(np.logspace(-3, -1, 3, base=2)),
-	"critic_step_size": list(np.logspace(-1, 1, 3, base=2)),
-	"avg_reward_step_size": list(np.logspace(-4, -2, 3, base=2)),
+	"actor_step_size": [2**(-5)], #list(np.logspace(-7, -2, 5, base=2)), #[2**(-5)], #list(np.logspace(-3, -1, 3, base=2)),
+	"critic_step_size": [2**(-3)], #list(np.logspace(-6, -1, 5, base=2)), #[2**(-3)], #list(np.logspace(-1, 1, 3, base=2)),
+	"avg_reward_step_size": [2**(-2)], #list(np.logspace(-6, -1, 5, base=2)), #[2**(-2)], #list(np.logspace(-4, -2, 3, base=2)),
 	"num_actions": 3,
-	"iht_size": 32768, #4096,
+	"iht_size": 65536, #8192, #32768
 	"verbose" : False
 }
 
@@ -606,4 +606,4 @@ current_agent = ActorCriticSoftmaxAgent
 
 run_experiment(current_env, current_agent, environment_parameters, \
 	agent_parameters, experiment_parameters)
-plt.show()
+#plt.show()

@@ -18,6 +18,8 @@ import plotly.graph_objects as go
 import plotly.io as pio
 from plotly.subplots import make_subplots
 
+import os
+
 def plot_result(agent_parameters, results_folder, figure_counter):
 	plt.rcParams.update({'figure.max_open_warning': 0})
 
@@ -68,6 +70,8 @@ def plot_result(agent_parameters, results_folder, figure_counter):
 	policy_distrib['trigo_std'] = policy_distrib.action_proba_std.apply(lambda x : x[0])
 	policy_distrib['nothing_std'] = policy_distrib.action_proba_std.apply(lambda x : x[1])
 	policy_distrib['clockwise_std'] = policy_distrib.action_proba_std.apply(lambda x : x[2])
+
+	fig_name = str(figure_counter) + '_' + label
 	
 	'''fig = plt.figure()
 	ax = Axes3D(fig)
@@ -78,7 +82,7 @@ def plot_result(agent_parameters, results_folder, figure_counter):
 	ax.set_ylabel('Wind heading (º)', fontweight='bold')
 	ax.set_zlabel('Action probability', fontweight='bold')
 	plt.show()'''
-	'''
+	
 	wsu = policy_distrib['ws'].unique()
 	whu = policy_distrib['wh'].unique()
 	pol_trigo_avg = policy_distrib.trigo_avg.to_numpy().reshape(len(wsu), len(whu))
@@ -97,14 +101,14 @@ def plot_result(agent_parameters, results_folder, figure_counter):
                     zaxis_title='action probability',
 					yaxis = dict(tickvals= list(np.linspace(-180, 180, 37))),
 					zaxis = dict(range= [0,1])))
-	pio.write_html(fig, file='index.html', auto_open=True)
-	'''
+	pio.write_html(fig, file=fig_name + '.html', auto_open=True)
+	
 	#fig.show()
 
-	fig2 = plt.figure()	
+	#fig2 = plt.figure()	
 	ax1 = plt.subplot(4, 1, 1)
 	# Slice plot
-	ws_slice = 10
+	ws_slice = 29
 	plt.scatter(policy_distrib[policy_distrib['ws']==ws_slice]['wh'], policy_distrib[policy_distrib['ws']==ws_slice]['trigo_avg'], label='rotate trigo')
 	plt.scatter(policy_distrib[policy_distrib['ws']==ws_slice]['wh'], policy_distrib[policy_distrib['ws']==ws_slice]['nothing_avg'], label='do nothing')
 	plt.scatter(policy_distrib[policy_distrib['ws']==ws_slice]['wh'], policy_distrib[policy_distrib['ws']==ws_slice]['clockwise_avg'], label='clockwise')
@@ -133,6 +137,7 @@ def plot_result(agent_parameters, results_folder, figure_counter):
 	plt.xlabel('Angle (deg)')
 	plt.ylabel('Value')
 	plt.legend()
+	plt.ylim([-20, 20])
 	plt.grid()
 
 	ax3 = plt.subplot(4, 1, 3)
@@ -163,8 +168,12 @@ def plot_result(agent_parameters, results_folder, figure_counter):
 
 	fig = plt.gcf()
 	fig.set_size_inches(14, 8)
-	plt.savefig('gif/result_' + str(figure_counter) + ' ' + label + '.png')
+	plt.draw()
+	if not os.path.exists('gif'):
+		os.makedirs('gif')
+	plt.savefig('gif/result_' + str(figure_counter) + '_' + label + '.png')
 	plt.pause(0.1)
+	fig.clear()
 
 
 def get_pre_filename(agent_parameters):

@@ -142,7 +142,6 @@ class wind:
 	__heading_rate_mean = 0 		# deg
 	__heading_rate_std  = None 		# deg
 	__time_step = 1 				# s
-	__seed = 10 		# the random seed to repeat the results
 	speed : float 					# m.s-1
 	heading : float 				# deg
 	__speed_init : float 			# m.s-1
@@ -156,7 +155,6 @@ class wind:
 		self.__heading_init = self.heading
 		self.__heading_rate_std = wind_heading_var
 		self.__speed_rate_std = wind_speed_var
-		random.seed(self.__seed)
 
 	def generate_wind(self):
 		if self.__speed_rate_std != 0:
@@ -194,6 +192,7 @@ class simu:
 		wind_heading_var, wind_speed_var): # need to check that this is a proper reset
 		self.__wind = wind(wind_heading_var, wind_speed_var, speed_start)
 		self.__wt = wind_turbine(angle_start)
+		self.__wt.get_wind(self.__wind.speed, 0.0)
 		self.steps = 0
 		self.state = {'wind_speed' :self.__wt.wind_sp, \
 			'wind_rel_heading' : self.__wt.wind_rel, \
@@ -267,7 +266,7 @@ class WindTurbineEnvironment(BaseEnvironment):
 			angle_start = env_info["angle_start"]
 		if env_info["random_speed_start"]:
 			# We could use a gaussian distribution centered on 10 and not hardcode 30 as max wind speed here
-			speed_start = float(30*np.random.rand(1))
+			speed_start = float(np.abs(np.random.normal(0, 10, 1))) #float(30*np.random.rand(1))
 		else:
 			speed_start = env_info["speed_start"]
 		wind_heading_var = env_info["wind_heading_var"]
